@@ -19,8 +19,13 @@
 * AUTHOR :    Henry Jiang         DATE :    Feb 06, 2021
 */
 
+#include "erosion.h"
+
+#include <stdio.h>
+#include <stdlib.h>
 #include <stdbool.h>
 #include <assert.h>
+
 
 #define GRAVITY             4
 #define INITIAL_SPEED       1
@@ -113,3 +118,7 @@ void erode( float* height_map, int map_size, struct droplet* drop ) {
 
 
 
+// TESTING
+int main() {
+    printf("Hello world!\n");
+}
