@@ -194,7 +194,30 @@ void erode( float* height_map, int map_size, struct droplet* drop ) {
 }
 
 
+void create_brush(int map_size, int radius) {
+    brushIndices = (int*)   malloc(map_size * map_size * sizeof(int));
+    brushWeights = (float*) malloc(map_size * map_size * sizeof(float));
+    
+    int indices_index = 0;
+    int weights_index = 0;
 
+    float weightSum = 0;
+    for (int brushY = -radius; brushY <= radius; brushY++) {
+        for (int brushX = -radius; brushX <= radius; brushX++) {
+            float sqrDst = brushX * brushX + brushY * brushY;
+            if (sqrDst < radius * radius) {
+                brushIndices[indices_index++] = brushY * map_size + brushX;
+                float brushWeight = 1 - sqrtf(sqrDst) / radius;
+                weightSum += brushWeight;
+                brushWeights[weights_index++] = brushWeight;
+            }
+        }
+    }
+
+    for (int i = 0; i < map_size * map_size; i++) {
+        brushWeights[i] /= weightSum;
+    }
+}
 
 
 // TESTING
