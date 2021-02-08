@@ -8,6 +8,7 @@
 *       void    erode( float* height_map, int map_size, struct droplet* drop )
 *
 * NOTES :
+*       Call create_brush before using erode with the same map_size
 *       Implements basic algorithm from Hans Theobald Beyer
 *       https://www.firespark.de/resources/downloads/implementation
 *       %20of%20a%20methode%20for%20hydraulic%20erosion.pdf
@@ -43,5 +44,27 @@ struct droplet {
  */ 
 void erode( float* height_map, int map_size, struct droplet* drop );
 
+
+/**
+ * @brief Creates the brush for erode
+ * 
+ * @param map_size   the size of the height_map buffer which is
+ *                   the width of the heightmap
+ * @param radius     the radius of the brush to be created
+ * 
+ * [important] call this before calling erode. This function setsup the 
+ *             internal state for the erode function
+ *             before calling on a new heightmap, free_brush() must be called
+ */ 
+void create_brush( int map_size, int radius );
+
+
+
+/**
+ * @brief Frees the brush for erode
+ * 
+ * [important] must be called after finished with erode to avoid memory leak
+ */
+void free_brush( void );
 
 #endif

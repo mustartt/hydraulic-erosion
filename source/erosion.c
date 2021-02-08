@@ -113,7 +113,6 @@ void interpolate( float height_height_map[], int height_map_size, float pos_x, f
 }
 
 
-
 void erode( float* height_map, int map_size, struct droplet* drop ) {
     assert(height_map);
     assert(drop);
@@ -194,6 +193,7 @@ void erode( float* height_map, int map_size, struct droplet* drop ) {
 }
 
 
+/* creates brush weights and brush indicies */
 void create_brush(int map_size, int radius) {
     brushIndices = (int*)   malloc(map_size * map_size * sizeof(int));
     brushWeights = (float*) malloc(map_size * map_size * sizeof(float));
@@ -220,7 +220,9 @@ void create_brush(int map_size, int radius) {
 }
 
 
-// TESTING
-int main() {
-    printf("Hello world!\n");
+/* frees brush indices and brush weights */
+void free_brush() {
+    free(brushIndices);
+    free(brushWeights);
 }
+
