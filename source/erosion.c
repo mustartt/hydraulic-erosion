@@ -3,10 +3,10 @@
 * FILENAME :        erosion.h   erosion.c
 *
 * DESCRIPTION :
-*       Implements iterative hydraulic erosion on height map 
+*       Implements iterative hydraulic erosion on height height_map 
 *
 * PUBLIC FUNCTIONS :
-*       void    erode( float* height_map, int map_size, int iters, int seed )
+*       void    erode( float* height_height_map, int height_map_size, int iters, int seed )
 *
 * PRIVATE FUNCTIONS :
 *
@@ -26,25 +26,37 @@
 #include <stdbool.h>
 #include <assert.h>
 
+#include <math.h>
 
-#define GRAVITY             4
-#define INITIAL_SPEED       1
-#define INITIAL_VOLUME      1
 
-#define DROPLET_LIFETIME    30
+#define GRAVITY                     4
+#define INITIAL_drop->velocity      1
+#define INITIAL_VOLUME              1
+#define INERTIA                     0.05f
+#define sedimentCapacityFactor      4.0f
+#define minSedimentCapacity         0.01f
+#define depositSpeed                0.3f
+#define erodeSpeed                  0.3f
+#define evaporateSpeed              0.01f
 
+#define DROPLET_LIFETIME            30
+
+
+int* brushIndices;
+float* brushWeights;
+int brushLength;
 
 
 /** 
  * @struct interp_result
- * @brief  stores the result of bilinear interpolation on the heightmap
+ * @brief  stores the result of bilinear interpolation on the heightheight_map
  * 
  * @var    interp_result::height
  *         height is the height of the interpolated result
  * @var    interp_result::gradient_x
- *         gradient_x is the gradient of the heightmap in the x direction
+ *         gradient_x is the gradient of the heightheight_map in the x direction
  * @var    interp_result::gradient_y
- *         gradient_y is the gradient of the heightmap in the y direction
+ *         gradient_y is the gradient of the heightheight_map in the y direction
  */
 struct interp_result {
     float height;
@@ -54,19 +66,19 @@ struct interp_result {
 
 
 /**
- * @brief Interpolates the height_map at coordinate pos_x pos_y 
+ * @brief Interpolates the height_height_map at coordinate pos_x pos_y 
  * 
  * Uses bilinear interpolation to sample the height and gradient in both the 
  * x and y direction, and stores the result in the result struct
  * 
- * @param height_map  heightmap
- * @param map_size    size of the heightmap
+ * @param height_height_map  heightheight_map
+ * @param height_map_size    size of the heightheight_map
  * @param pos_x       x coordinate to sample
  * @param pos_y       y coordinate to sample
  * @param[out] result struct of type interp_result where the information is 
  *                    stored
  */
-void interpolate( float height_map[], int map_size, float pos_x, float pos_y, 
+void interpolate( float height_height_map[], int height_map_size, float pos_x, float pos_y, 
                   struct interp_result* result ) {
     int coord_x = (int) pos_x;
     int coord_y = (int) pos_y;
@@ -76,11 +88,11 @@ void interpolate( float height_map[], int map_size, float pos_x, float pos_y,
     float y = pos_y - coord_y;
 
     // Calculate heights of the four nodes of the droplet's cell
-    int map_index = coord_y * map_size + coord_x;
-    float height_tl = height_map[map_index];
-    float height_tr = height_map[map_index + 1];
-    float height_bl = height_map[map_index + map_size];
-    float height_sr = height_map[map_index + map_size + 1];
+    int height_map_index = coord_y * height_map_size + coord_x;
+    float height_tl = height_height_map[height_map_index];
+    float height_tr = height_height_map[height_map_index + 1];
+    float height_bl = height_height_map[height_map_index + height_map_size];
+    float height_sr = height_height_map[height_map_index + height_map_size + 1];
 
     // Calculate droplet's direction of flow with bilinear interpolation of height difference along the edges
     float gradient_x = (height_tr - height_tl)   * (1 - y) 
@@ -102,19 +114,86 @@ void interpolate( float height_map[], int map_size, float pos_x, float pos_y,
 
 
 
-
-
 void erode( float* height_map, int map_size, struct droplet* drop ) {
     assert(height_map);
     assert(drop);
 
     for ( int life = 0; life < DROPLET_LIFETIME; life++) {
-        // calculate path 
-        // calculate gradient
-        // calculate sediment pickup / erosion
-        // calculate sediment deposition
+        int nodeX = (int) drop->pos_x;
+        int nodeY = (int) drop->pos_y;
+        int dropletIndex = nodeY * map_size + nodeX;
+        // Calculate droplet's offset inside the cell (0,0) = at NW node, (1,1) = at SE node
+        float cellOffsetX = drop->pos_x - nodeX;
+        float cellOffsetY = drop->pos_y - nodeY;
+
+        // Calculate droplet's height and direction of flow with bilinear interpolation of surrounding heights
+        struct interp_result heightAndGradient = { 0 };
+        interpolate(height_map, map_size, drop->pos_x, drop->pos_y, &heightAndGradient);
+        
+        // Update the droplet's direction and position (move position 1 unit regardless of speed)
+        drop->dir_x = (drop->dir_x * INERTIA - heightAndGradient.gradient_x * (1 - INERTIA));
+        drop->dir_y = (drop->dir_y * INERTIA - heightAndGradient.gradient_y * (1 - INERTIA));
+        // Normalize direction
+        float len = sqrtf(drop->dir_x * drop->dir_x + drop->dir_y * drop->dir_y);
+        if (len != 0) {
+            drop->dir_x /= len;
+            drop->dir_y /= len;
+        }
+        // Change position based on dir and velocity
+        drop->pos_x += drop->dir_x;
+        drop->pos_y += drop->dir_y;
+
+        // Stop simulating droplet if it's not moving or has flowed over edge of map
+        if ((drop->dir_x == 0 && drop->dir_y == 0) 
+            || drop->pos_x < 0 || drop->pos_x >= map_size - 1 
+            || drop->pos_y < 0 || drop->pos_y >= map_size - 1) {
+            break;
+        }
+
+        // Find the droplet's new height and calculate the deltaHeight
+        struct interp_result new_result = { 0 };
+        interpolate(height_map, map_size, drop->pos_x, drop->pos_y, &new_result);
+        float newHeight = new_result.height;
+        float deltaHeight = newHeight - heightAndGradient.height;
+
+        float sedimentCapacity = fmaxf(-deltaHeight * drop->velocity * drop->water * sedimentCapacityFactor, minSedimentCapacity);
+        // If carrying more sediment than capacity, or if flowing uphill:
+        if (drop->sediment > sedimentCapacity || deltaHeight > 0) {
+            // If moving uphill (deltaHeight > 0) try fill up to the current height, otherwise deposit a fraction of the excess sediment
+            float amountToDeposit = (deltaHeight > 0) ? fminf(deltaHeight, drop->sediment) 
+                                                      : (drop->sediment - sedimentCapacity) * depositSpeed;
+            drop->sediment -= amountToDeposit;
+
+            // Add the sediment to the four nodes of the current cell using bilinear interpolation
+            // Deposition is not distributed over a radius (like erosion) so that it can fill small pits
+            height_map[dropletIndex] += amountToDeposit * (1 - cellOffsetX) * (1 - cellOffsetY);
+            height_map[dropletIndex + 1] += amountToDeposit * cellOffsetX * (1 - cellOffsetY);
+            height_map[dropletIndex + map_size] += amountToDeposit * (1 - cellOffsetX) * cellOffsetY;
+            height_map[dropletIndex + map_size + 1] += amountToDeposit * cellOffsetX * cellOffsetY;
+        }
+        else {
+            // Erode a fraction of the droplet's current carry capacity.
+            // Clamp the erosion to the change in height so that it doesn't dig a hole in the terrain behind the droplet
+            float amountToErode = fminf((sedimentCapacity - drop->sediment) * erodeSpeed, -deltaHeight);
+
+            // Use erosion brush to erode from all nodes inside the droplet's erosion radius
+            for (int i = 0; i < brushLength; i ++) {
+                int erodeIndex = dropletIndex + brushIndices[i];
+
+                float weightedErodeAmount = amountToErode * brushWeights[i];
+                float deltaSediment = (height_map[erodeIndex] < weightedErodeAmount) ? height_map[erodeIndex] : weightedErodeAmount;
+                height_map[erodeIndex] -= deltaSediment;
+                drop->sediment += deltaSediment;
+            }
+        }
+
+        // Update droplet's speed and water content
+        drop->velocity = sqrtf(fmaxf(0,drop->velocity * drop->velocity + deltaHeight * GRAVITY));
+        drop->water *= (1 - evaporateSpeed);
     }
 }
+
+
 
 
 

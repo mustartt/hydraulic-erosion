@@ -19,11 +19,11 @@
 #define EROSION_H_
 
 struct droplet {
-    float posX, posY;
-    float dirX, dirY;
+    float pos_x, pos_y;
+    float dir_x, dir_y;
     float velocity;
     float water;
-    float volume;
+    float sediment;
 };
 
 /**
