@@ -1,24 +1,25 @@
 import React from 'react';
-import logo from './logo.svg';
 import './App.css';
 
-function App() {
+import { createMuiTheme, ThemeProvider } from '@material-ui/core'
+
+import Editor from './components/editor'
+import Viewport from './components/viewport'
+
+// Use Material UI Dark theme
+const theme = createMuiTheme({
+  palette: {
+    type: 'dark'
+  }
+});
+
+const App = () => {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="app-container">
+      <ThemeProvider theme={theme}>
+        <Viewport></Viewport>
+        <Editor></Editor>
+      </ThemeProvider>
     </div>
   );
 }
