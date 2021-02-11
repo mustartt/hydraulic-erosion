@@ -4,6 +4,7 @@ import { Mesh } from "three";
 
 import "./viewport.css";
 
+import TerrainMesh from './viewport-components/terrain-mesh'
 
 // testing:
 const Box: React.FC<MeshProps> = (props) => {
@@ -32,9 +33,11 @@ const Viewport = () => {
   return (
     <div className="viewport">
       <Canvas>
-        <ambientLight></ambientLight>
-        <pointLight position={[10, 10, 10]}></pointLight>
-        <Box position={[-1, 0, 0]}/>
+        <ambientLight intensity={0.3}/>
+        <pointLight 
+          position={[10, 10, 10]} />
+        <Box position={[0, 0, 0]} />
+        
       </Canvas>
     </div>
     );
