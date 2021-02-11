@@ -13,14 +13,19 @@ const Editor = () => {
     return (
         <div className="editor-pane">
             <Paper>
-                <Typography variant="h4">
-                    Settings
-                </Typography>
-
+                <Typography variant="h4">Settings</Typography>
                 <Starting></Starting>
+            </Paper>
+            <Paper>
                 <NoiseEditor></NoiseEditor>
+            </Paper>
+            <Paper>
                 <SimEditor></SimEditor>
+            </Paper>
+            <Paper>
                 <ViewEditor></ViewEditor>
+            </Paper>
+            <Paper>
                 <Actions></Actions>
             </Paper>
         </div>
