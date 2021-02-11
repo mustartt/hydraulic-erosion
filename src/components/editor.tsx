@@ -1,5 +1,5 @@
 import React from 'react'
-import { Typography } from '@material-ui/core'
+import { Paper, Typography } from '@material-ui/core'
 
 import './editor.css'
 
@@ -12,15 +12,17 @@ import Actions from './editor-elements/editor-actions'
 const Editor = () => {
     return (
         <div className="editor-pane">
-            <Typography variant="h4">
-                Settings
-            </Typography>
+            <Paper>
+                <Typography variant="h4">
+                    Settings
+                </Typography>
 
-            <Starting></Starting>
-            <NoiseEditor></NoiseEditor>
-            <SimEditor></SimEditor>
-            <ViewEditor></ViewEditor>
-            <Actions></Actions>
+                <Starting></Starting>
+                <NoiseEditor></NoiseEditor>
+                <SimEditor></SimEditor>
+                <ViewEditor></ViewEditor>
+                <Actions></Actions>
+            </Paper>
         </div>
     );
 }
