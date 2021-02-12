@@ -30,15 +30,16 @@ struct setting {
  * @brief The settings for the height map generator
  * 
  * Example Settings struct:
- * 
- * struct setting test1 = {
- *     .seed = 12345,
- *     .octaves = 6,
- *     .persistence = 0.65f,
- *     .height = 1,
- *     .scale = 1
- * }; 
  */
+/*
+struct setting example = {
+    .seed = 12345,
+    .octaves = 6,
+    .persistence = 0.65f,
+    .height = 1,
+    .scale = 1
+};
+*/
 
 typedef struct setting* setting_t;
 
