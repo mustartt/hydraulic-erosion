@@ -79,6 +79,40 @@ void export_obj(float* heightmap, int map_size, int export_size, char* filename)
 
 
 
+
 void export_png(float* heightmap, int map_size, char* filename) {
 
+}
+
+
+
+
+float* read_map(char* filename, int size) {
+    FILE* file = fopen(filename, "r");
+
+    float* height_map = (float*) malloc(size * size * sizeof(float));
+    for (int y = 0; y < size; y++) {
+        for (int x = 0; x < size; x++) {
+            int val;
+            fscanf(file, "%d", &val);
+            height_map[x * size + y] = (float) val / 255.0f;
+        }
+    }
+
+    fclose(file);
+    return height_map;
+}
+
+void write_map(float* height_map, int size, char* filename) {
+    FILE* file = fopen(filename, "w");
+
+    for (int y = 0; y < size; y++) {
+        for (int x = 0; x < size; x++) {
+            int val = (int) (height_map[x * size + y] * 255);
+            fprintf(file, "%d ", val);
+        }
+        fprintf(file, "\n");
+    }
+
+    fclose(file);
 }

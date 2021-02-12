@@ -49,3 +49,8 @@ void export_obj( float* heightmap, int map_size, int export_size, char* filename
  * @param filename  the filename [include extension]
  */
 void export_png( float* heightmap, int map_size, char* filename );
+
+
+// DEBUGGING FUNCTIONS
+float* read_map( char* filename, int size );
+void   write_map( float* height_map, int size, char* filename );
