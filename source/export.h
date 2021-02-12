@@ -30,7 +30,7 @@
  * @param map_size  the heightmap size
  * @param filename  the filename [include extension]
  */
-void export_obj( float* heightmap, int map_size, char* filename );
+void export_obj( float* heightmap, int map_size, int export_size, char* filename );
 
 
 /**

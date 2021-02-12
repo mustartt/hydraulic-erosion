@@ -22,6 +22,7 @@
 #include "noise.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 // add noise to heightmap based on scale and weight
 void write_single(float* height_map, int map_size, float scale, float weight) {
@@ -42,10 +43,11 @@ void write_single(float* height_map, int map_size, float scale, float weight) {
     }
 }
 
-/* note: makesure height_map is zero'd before calling */
 void gen_heightmap(float* height_map, int map_size, setting_t setting) {
     // set seed and init permutation array
     init_perm();
+    memset(height_map, 0, map_size * map_size);
+
     srand(setting->seed);
     float weight = 1.0f;
     float scale = setting->scale * map_size;
