@@ -19,6 +19,7 @@
 * AUTHOR :    Henry Jiang         DATE :    Feb 11, 2021
 */
 
+#include "noise.h"
 #include <math.h>
 
 int grad3[][3] = {{1, 1, 0}, {-1, 1, 0}, {1, -1, 0}, {-1, -1, 0}, 

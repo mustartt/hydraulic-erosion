@@ -30,8 +30,6 @@
 
 
 #define GRAVITY                     4
-#define INITIAL_drop->velocity      1
-#define INITIAL_VOLUME              1
 #define INERTIA                     0.05f
 #define sedimentCapacityFactor      4.0f
 #define minSedimentCapacity         0.01f
@@ -66,19 +64,19 @@ struct interp_result {
 
 
 /**
- * @brief Interpolates the height_height_map at coordinate pos_x pos_y 
+ * @brief Interpolates the height_map at coordinate pos_x pos_y 
  * 
  * Uses bilinear interpolation to sample the height and gradient in both the 
  * x and y direction, and stores the result in the result struct
  * 
- * @param height_height_map  heightheight_map
- * @param height_map_size    size of the heightheight_map
+ * @param height_map  heightheight_map
+ * @param map_size    size of the heightheight_map
  * @param pos_x       x coordinate to sample
  * @param pos_y       y coordinate to sample
  * @param[out] result struct of type interp_result where the information is 
  *                    stored
  */
-void interpolate( float height_height_map[], int height_map_size, float pos_x, float pos_y, 
+void interpolate( float* height_map, int map_size, float pos_x, float pos_y, 
                   struct interp_result* result ) {
     int coord_x = (int) pos_x;
     int coord_y = (int) pos_y;
@@ -88,11 +86,11 @@ void interpolate( float height_height_map[], int height_map_size, float pos_x, f
     float y = pos_y - coord_y;
 
     // Calculate heights of the four nodes of the droplet's cell
-    int height_map_index = coord_y * height_map_size + coord_x;
-    float height_tl = height_height_map[height_map_index];
-    float height_tr = height_height_map[height_map_index + 1];
-    float height_bl = height_height_map[height_map_index + height_map_size];
-    float height_sr = height_height_map[height_map_index + height_map_size + 1];
+    int height_map_index = coord_y * map_size + coord_x;
+    float height_tl = height_map[height_map_index];
+    float height_tr = height_map[height_map_index + 1];
+    float height_bl = height_map[height_map_index + map_size];
+    float height_sr = height_map[height_map_index + map_size + 1];
 
     // Calculate droplet's direction of flow with bilinear interpolation of height difference along the edges
     float gradient_x = (height_tr - height_tl)   * (1 - y) 
@@ -120,6 +118,8 @@ void erode( float* height_map, int map_size, struct droplet* drop ) {
     for ( int life = 0; life < DROPLET_LIFETIME; life++) {
         int nodeX = (int) drop->pos_x;
         int nodeY = (int) drop->pos_y;
+        //printf("Drop is at (%d, %d)\n", nodeX, nodeY);
+        
         int dropletIndex = nodeY * map_size + nodeX;
         // Calculate droplet's offset inside the cell (0,0) = at NW node, (1,1) = at SE node
         float cellOffsetX = drop->pos_x - nodeX;
@@ -128,9 +128,10 @@ void erode( float* height_map, int map_size, struct droplet* drop ) {
         // Calculate droplet's height and direction of flow with bilinear interpolation of surrounding heights
         struct interp_result heightAndGradient = { 0 };
         interpolate(height_map, map_size, drop->pos_x, drop->pos_y, &heightAndGradient);
+        //printf("Interp: %f %f %f\n", heightAndGradient.height, heightAndGradient.gradient_x, heightAndGradient.gradient_y);
         
         // Update the droplet's direction and position (move position 1 unit regardless of speed)
-        drop->dir_x = (drop->dir_x * INERTIA - heightAndGradient.gradient_x * (1 - INERTIA));
+        drop->dir_x = (drop->dir_x * INERTIA - heightAndGradient.gradient_x *   (1 - INERTIA));
         drop->dir_y = (drop->dir_y * INERTIA - heightAndGradient.gradient_y * (1 - INERTIA));
         // Normalize direction
         float len = sqrtf(drop->dir_x * drop->dir_x + drop->dir_y * drop->dir_y);
@@ -143,11 +144,15 @@ void erode( float* height_map, int map_size, struct droplet* drop ) {
         drop->pos_y += drop->dir_y;
 
         // Stop simulating droplet if it's not moving or has flowed over edge of map
+        /*
         if ((drop->dir_x == 0 && drop->dir_y == 0) 
             || drop->pos_x < 0 || drop->pos_x >= map_size - 1 
             || drop->pos_y < 0 || drop->pos_y >= map_size - 1) {
             break;
         }
+        */
+
+        //printf("Did not break\n");
 
         // Find the droplet's new height and calculate the deltaHeight
         struct interp_result new_result = { 0 };
@@ -176,6 +181,7 @@ void erode( float* height_map, int map_size, struct droplet* drop ) {
             float amountToErode = fminf((sedimentCapacity - drop->sediment) * erodeSpeed, -deltaHeight);
 
             // Use erosion brush to erode from all nodes inside the droplet's erosion radius
+
             for (int i = 0; i < brushLength; i ++) {
                 int erodeIndex = dropletIndex + brushIndices[i];
 
