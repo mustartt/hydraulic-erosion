@@ -25,10 +25,14 @@
  * @param filename. The exported file in the Virtual file system is 
  * the .obj format with only verticies and faces exported [does not include
  * the noramls or UVs]. The exported mesh has dimension [1, 1, 1].
+ * The obj file can be exported in lower quality to reduce file size 
+ * controlled by @param export_size. and @param export_size must be 
+ * less and an interger multiple of @param map_size.
  * 
- * @param heightmap the heightmap to export
- * @param map_size  the heightmap size
- * @param filename  the filename [include extension]
+ * @param heightmap   the heightmap to export
+ * @param map_size    the heightmap size
+ * @param export_size the desired export size
+ * @param filename    the filename [include extension]
  */
 void export_obj( float* heightmap, int map_size, int export_size, char* filename );
 
