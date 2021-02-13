@@ -88,7 +88,7 @@ void export_obj(float* heightmap, int map_size, int export_size, char* filename)
       fprintf(fp, "v %f %f %f\n", coord_x, coord_y, coord_z);
     }
   }
-
+  
   fprintf(fp, "# List of faces: f (v1 index, v2 index, v3 index) \n");
 
   // write face vertex indicies
