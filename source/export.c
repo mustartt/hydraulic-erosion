@@ -152,26 +152,19 @@ typedef struct {
 } vec3;
 
 
-/* calculates the cross product between u and v */
-vec3 cross_product(vec3* u, vec3* v) {
-  vec3 result = {
-    .x = u->y * v->z - u->z * v->y,
-    .y = -(u->x * v->z - u->z * v->x),
-    .z = u->x * v->y - u->y * v->x 
-  };
-  return result;
-}
-
 /* calculates u - v in R3 */
-vec3 subtract(vec3* u, vec3* v) {
-  vec3 result = {
-    .x = u->x - v->x,
-    .y = u->y - v->y,
-    .x = u->z - v->z,
-  };
-  return result;
+void subtract(vec3* u, vec3* v, vec3* result) {
+  result->x = u->x - v->x;
+  result->y = u->y - v->y;
+  result->z = u->z - v->z;
 }
 
+/* calculates the cross product between u and v */
+void cross_product(vec3* u, vec3* v, vec3* result) {
+    result->x = u->y * v->z - u->z * v->y;
+    result->y = -(u->x * v->z - u->z * v->x);
+    result->z = u->x * v->y - u->y * v->x;
+}
 
 void print_vec(vec3 vec) {
   printf("vec: %f %f %f\n", vec.x, vec.y, vec.z);
@@ -188,9 +181,10 @@ void export_stl(float* heightmap, int map_size, char* filename) {
   // Header
   uint8_t  header[80] = "Hello World STL FILE";
   uint32_t vertex_count = 2 * (map_size - 1) * (map_size - 1);
-  
-  //fwrite(header, sizeof(uint8_t), 80, fp);
-  //TODO: This is wrong -> fwrite(vertex_count, sizeof(uint32_t), 1, fp); CHANGE TO BUFFER 
+  uint32_t vertex_buffer[1] = { vertex_count };
+
+  fwrite(header, sizeof(uint8_t), 80, fp);
+  fwrite(vertex_buffer, sizeof(uint32_t), 1, fp); 
 
   // v1 is top-left, v2 is top-right, v3 is bottom-right, v4 is bottom-left
   for (int z = 0; z < map_size - 1; z++) {
@@ -208,13 +202,16 @@ void export_stl(float* heightmap, int map_size, char* filename) {
       
       // BUG: INCORRECT VECTOR SUBTRACTION RESULTS
       // triangle 1 -> 124
-      vec3 edge21 = subtract(&v2, &v1);
-      vec3 edge41 = subtract(&v4, &v1);
-      vec3 normal1 = cross_product(&edge21, &edge41);
+      vec3 edge21, edge41, normal1;
+      subtract(&v2, &v1, &edge21);
+      subtract(&v4, &v1, &edge41);
+      cross_product(&edge21, &edge41, &normal1);
+      
       // triangel 2 -> 234
-      vec3 edge23 = subtract(&v2, &v3);
-      vec3 edge43 = subtract(&v4, &v3);
-      vec3 normal2 = cross_product(&edge23, &edge43);
+      vec3 edge23, edge43, normal2; 
+      subtract(&v2, &v3, &edge23);
+      subtract(&v4, &v3, &edge43);
+      cross_product(&edge23, &edge43, &normal2);
 
       // write normal1
       // write v1 v2 v4
