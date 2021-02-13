@@ -54,6 +54,21 @@ void export_obj( float* heightmap, int map_size, int export_size, char* filename
 void export_png( float* heightmap, int map_size, char* filename );
 
 
+/**
+ * @brief Export heightmap as an .stl file with filename
+ * 
+ * Exports the @param heightmap with @param map_size with filename
+ * @param filename. The exported file in the Virtual file system is 
+ * in the .stl binary fileformat
+ * note: see https://en.wikipedia.org/wiki/STL_(file_format)
+ * 
+ * @param heightmap the heightmap to export
+ * @param map_size  the heightmap size
+ * @param filename  the filename [include extension]
+ */
+void export_stl( float* heightmap, int map_size, char* filename );
+
+
 // DEBUGGING FUNCTIONS
 float* read_map( char* filename, int size );
 void   write_map( float* height_map, int size, char* filename );

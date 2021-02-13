@@ -23,13 +23,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <stdint.h>
 #include <assert.h>
 
 // Uncompressed PNG Library
 #include "svpng.c"
 
-// debug
-#include "heightmap_gen.h"
 
 float* read_map(char* filename, int size) {
   FILE* file = fopen(filename, "r");
@@ -97,9 +96,9 @@ void export_obj(float* heightmap, int map_size, int export_size, char* filename)
   // face2: (x + 1, z)  (x, z + 1)  (x + 1, z + 1)
   for (int x = 0; x < export_size - 1; x++) {
     for (int z = 0; z < export_size - 1; z++) {
-      int top_left  = calc_vertex_index(x, z, export_size);
-      int top_right = calc_vertex_index(x + 1, z, export_size);
-      int bot_left  = calc_vertex_index(x, z + 1, export_size);
+      int top_left  = calc_vertex_index(x,     z,     export_size);
+      int top_right = calc_vertex_index(x + 1, z,     export_size);
+      int bot_left  = calc_vertex_index(x,     z + 1, export_size);
       int bot_right = calc_vertex_index(x + 1, z + 1, export_size);
       
       fprintf(fp, "f %d %d %d\n", top_left,  top_right, bot_left);
@@ -143,5 +142,89 @@ void export_png(float* heightmap, int map_size, char* filename) {
 
   svpng(fp, map_size, map_size, rgb_buffer, 0);
   free(rgb_buffer);
+  fclose(fp);
+}
+
+typedef struct {
+  float x;
+  float y;
+  float z;
+} vec3;
+
+
+/* calculates the cross product between u and v */
+vec3 cross_product(vec3* u, vec3* v) {
+  vec3 result = {
+    .x = u->y * v->z - u->z * v->y,
+    .y = -(u->x * v->z - u->z * v->x),
+    .z = u->x * v->y - u->y * v->x 
+  };
+  return result;
+}
+
+/* calculates u - v in R3 */
+vec3 subtract(vec3* u, vec3* v) {
+  vec3 result = {
+    .x = u->x - v->x,
+    .y = u->y - v->y,
+    .x = u->z - v->z,
+  };
+  return result;
+}
+
+
+void print_vec(vec3 vec) {
+  printf("vec: %f %f %f\n", vec.x, vec.y, vec.z);
+}
+
+void export_stl(float* heightmap, int map_size, char* filename) {
+  FILE* fp = fopen(filename, "wb");
+  
+  if (fp == NULL)
+    return;
+
+  printf("Exporting to STL Format...\n");
+
+  // Header
+  uint8_t  header[80] = "Hello World STL FILE";
+  uint32_t vertex_count = 2 * (map_size - 1) * (map_size - 1);
+  
+  //fwrite(header, sizeof(uint8_t), 80, fp);
+  //TODO: This is wrong -> fwrite(vertex_count, sizeof(uint32_t), 1, fp); CHANGE TO BUFFER 
+
+  // v1 is top-left, v2 is top-right, v3 is bottom-right, v4 is bottom-left
+  for (int z = 0; z < map_size - 1; z++) {
+    for (int x = 0; x < map_size - 1; x++) {
+      // sample height map
+      float sample1 = heightmap[z * map_size + x];
+      float sample2 = heightmap[z * map_size + (x + 1)];
+      float sample3 = heightmap[(z + 1) * map_size + (x + 1)];
+      float sample4  = heightmap[(z + 1) * map_size + x];
+
+      vec3 v1 = { (float) x / map_size,       sample1, (float) z / map_size };
+      vec3 v2 = { (float) (x + 1) / map_size, sample2, (float) z / map_size };
+      vec3 v3 = { (float) (x + 1) / map_size, sample3, (float) (z + 1) / map_size };
+      vec3 v4 = { (float) x / map_size,       sample4, (float) (z + 1) / map_size };
+      
+      // BUG: INCORRECT VECTOR SUBTRACTION RESULTS
+      // triangle 1 -> 124
+      vec3 edge21 = subtract(&v2, &v1);
+      vec3 edge41 = subtract(&v4, &v1);
+      vec3 normal1 = cross_product(&edge21, &edge41);
+      // triangel 2 -> 234
+      vec3 edge23 = subtract(&v2, &v3);
+      vec3 edge43 = subtract(&v4, &v3);
+      vec3 normal2 = cross_product(&edge23, &edge43);
+
+      // write normal1
+      // write v1 v2 v4
+      // write uint16_t attribute byte of 0
+      
+      // write normal2
+      // write v2 v3 v4
+      // write uint16_t attribute byte of 0
+    }
+  }
+
   fclose(fp);
 }
