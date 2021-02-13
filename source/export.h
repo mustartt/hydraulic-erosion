@@ -18,6 +18,9 @@
 * AUTHOR :    Henry Jiang         DATE :    Feb 06, 2021
 *H*/
 
+#ifndef EXPORT_H_
+#define EXPORT_H_
+
 /**
  * @brief Export heightmap as an .obj file with filename
  * 
@@ -54,3 +57,5 @@ void export_png( float* heightmap, int map_size, char* filename );
 // DEBUGGING FUNCTIONS
 float* read_map( char* filename, int size );
 void   write_map( float* height_map, int size, char* filename );
+
+#endif

@@ -29,21 +29,6 @@
 #include <math.h>
 
 
-#define GRAVITY                     4
-#define INERTIA                     0.05f
-#define sedimentCapacityFactor      4.0f
-#define minSedimentCapacity         0.01f
-#define depositSpeed                0.3f
-#define erodeSpeed                  0.3f
-#define evaporateSpeed              0.01f
-
-#define DROPLET_LIFETIME            30
-
-
-int* brushIndices;
-float* brushWeights;
-int brushLength;
-
 
 /** 
  * @struct interp_result
@@ -95,7 +80,7 @@ void interpolate( float* height_map, int map_size, float pos_x, float pos_y,
     // Calculate droplet's direction of flow with bilinear interpolation of height difference along the edges
     float gradient_x = (height_tr - height_tl)   * (1 - y) 
                        + (height_sr - height_bl) * y;
-    float gradient_y = (height_bl - height_tl)    * (1 - x) 
+    float gradient_y = (height_bl - height_tl)   * (1 - x) 
                        + (height_sr - height_tr) * x;
 
     // Calculate height with bilinear interpolation of the heights of the nodes of the cell
@@ -110,125 +95,96 @@ void interpolate( float* height_map, int map_size, float pos_x, float pos_y,
     result->gradient_y = gradient_y;
 }
 
+#define DROPLET_LIFETIME    30
+#define INITAL_SPEED        1
+#define INITAL_WATERVOLUME  1
+#define INERTA              .05f
+
+#define SEDIMENT_CAPACITY_FACTOR  4
+#define MIN_SEDIMENT_CAPACITY     .01f
+#define DEPOSIT_SPEED             .3f
+#define ERODE_SPEED               .3f
+#define EVAPORATE_SPEED           .01f
+#define GRAVITY                   4
+
 
 void erode( float* height_map, int map_size, struct droplet* drop ) {
-    assert(height_map);
-    assert(drop);
+  assert(height_map);
+  assert(drop);
 
-    for ( int life = 0; life < DROPLET_LIFETIME; life++) {
-        int nodeX = (int) drop->pos_x;
-        int nodeY = (int) drop->pos_y;
-        //printf("Drop is at (%d, %d)\n", nodeX, nodeY);
-        
-        int dropletIndex = nodeY * map_size + nodeX;
-        // Calculate droplet's offset inside the cell (0,0) = at NW node, (1,1) = at SE node
-        float cellOffsetX = drop->pos_x - nodeX;
-        float cellOffsetY = drop->pos_y - nodeY;
+  for (int life = 0; life < DROPLET_LIFETIME; life++) {
+    int nodeX = (int) drop->pos_x;
+    int nodeY = (int) drop->pos_y;
+    int dropletIndex = nodeY * map_size + nodeX;
+    // Calculate droplet's offset inside the cell (0,0) = at NW node, (1,1) = at SE node
+    float cellOffsetX = drop->pos_x - nodeX;
+    float cellOffsetY = drop->pos_y - nodeY;
 
-        // Calculate droplet's height and direction of flow with bilinear interpolation of surrounding heights
-        struct interp_result heightAndGradient = { 0 };
-        interpolate(height_map, map_size, drop->pos_x, drop->pos_y, &heightAndGradient);
-        //printf("Interp: %f %f %f\n", heightAndGradient.height, heightAndGradient.gradient_x, heightAndGradient.gradient_y);
-        
-        // Update the droplet's direction and position (move position 1 unit regardless of speed)
-        drop->dir_x = (drop->dir_x * INERTIA - heightAndGradient.gradient_x *   (1 - INERTIA));
-        drop->dir_y = (drop->dir_y * INERTIA - heightAndGradient.gradient_y * (1 - INERTIA));
-        // Normalize direction
-        float len = sqrtf(drop->dir_x * drop->dir_x + drop->dir_y * drop->dir_y);
-        if (len != 0) {
-            drop->dir_x /= len;
-            drop->dir_y /= len;
-        }
-        // Change position based on dir and velocity
-        drop->pos_x += drop->dir_x;
-        drop->pos_y += drop->dir_y;
+    struct interp_result heightAndGradient = { 0 };
+    interpolate(height_map, map_size, drop->pos_x, drop->pos_y, &heightAndGradient);
 
-        // Stop simulating droplet if it's not moving or has flowed over edge of map
-        /*
-        if ((drop->dir_x == 0 && drop->dir_y == 0) 
-            || drop->pos_x < 0 || drop->pos_x >= map_size - 1 
-            || drop->pos_y < 0 || drop->pos_y >= map_size - 1) {
-            break;
-        }
-        */
-
-        //printf("Did not break\n");
-
-        // Find the droplet's new height and calculate the deltaHeight
-        struct interp_result new_result = { 0 };
-        interpolate(height_map, map_size, drop->pos_x, drop->pos_y, &new_result);
-        float newHeight = new_result.height;
-        float deltaHeight = newHeight - heightAndGradient.height;
-
-        float sedimentCapacity = fmaxf(-deltaHeight * drop->velocity * drop->water * sedimentCapacityFactor, minSedimentCapacity);
-        // If carrying more sediment than capacity, or if flowing uphill:
-        if (drop->sediment > sedimentCapacity || deltaHeight > 0) {
-            // If moving uphill (deltaHeight > 0) try fill up to the current height, otherwise deposit a fraction of the excess sediment
-            float amountToDeposit = (deltaHeight > 0) ? fminf(deltaHeight, drop->sediment) 
-                                                      : (drop->sediment - sedimentCapacity) * depositSpeed;
-            drop->sediment -= amountToDeposit;
-
-            // Add the sediment to the four nodes of the current cell using bilinear interpolation
-            // Deposition is not distributed over a radius (like erosion) so that it can fill small pits
-            height_map[dropletIndex] += amountToDeposit * (1 - cellOffsetX) * (1 - cellOffsetY);
-            height_map[dropletIndex + 1] += amountToDeposit * cellOffsetX * (1 - cellOffsetY);
-            height_map[dropletIndex + map_size] += amountToDeposit * (1 - cellOffsetX) * cellOffsetY;
-            height_map[dropletIndex + map_size + 1] += amountToDeposit * cellOffsetX * cellOffsetY;
-        }
-        else {
-            // Erode a fraction of the droplet's current carry capacity.
-            // Clamp the erosion to the change in height so that it doesn't dig a hole in the terrain behind the droplet
-            float amountToErode = fminf((sedimentCapacity - drop->sediment) * erodeSpeed, -deltaHeight);
-
-            // Use erosion brush to erode from all nodes inside the droplet's erosion radius
-
-            for (int i = 0; i < brushLength; i ++) {
-                int erodeIndex = dropletIndex + brushIndices[i];
-
-                float weightedErodeAmount = amountToErode * brushWeights[i];
-                float deltaSediment = (height_map[erodeIndex] < weightedErodeAmount) ? height_map[erodeIndex] : weightedErodeAmount;
-                height_map[erodeIndex] -= deltaSediment;
-                drop->sediment += deltaSediment;
-            }
-        }
-
-        // Update droplet's speed and water content
-        drop->velocity = sqrtf(fmaxf(0,drop->velocity * drop->velocity + deltaHeight * GRAVITY));
-        drop->water *= (1 - evaporateSpeed);
-    }
-}
-
-
-/* creates brush weights and brush indicies */
-void create_brush(int map_size, int radius) {
-    brushIndices = (int*)   malloc(map_size * map_size * sizeof(int));
-    brushWeights = (float*) malloc(map_size * map_size * sizeof(float));
+    drop->dir_x = (drop->dir_x * INERTA - heightAndGradient.gradient_x * (1 - INERTA));
+    drop->dir_y = (drop->dir_y * INERTA - heightAndGradient.gradient_y * (1 - INERTA));
     
-    int indices_index = 0;
-    int weights_index = 0;
+    // Normalize direction
+    float len = sqrtf(drop->dir_x * drop->dir_x + drop->dir_y * drop->dir_y);
+    if (len != 0) {
+      drop->dir_x /= len;
+      drop->dir_y /= len;
+    }
+    drop->pos_x += drop->dir_x;
+    drop->pos_y += drop->dir_y;
 
-    float weightSum = 0;
-    for (int brushY = -radius; brushY <= radius; brushY++) {
-        for (int brushX = -radius; brushX <= radius; brushX++) {
-            float sqrDst = brushX * brushX + brushY * brushY;
-            if (sqrDst < radius * radius) {
-                brushIndices[indices_index++] = brushY * map_size + brushX;
-                float brushWeight = 1 - sqrtf(sqrDst) / radius;
-                weightSum += brushWeight;
-                brushWeights[weights_index++] = brushWeight;
-            }
-        }
+    // Stop simulating droplet if it's not moving or has flowed over edge of map
+    if ((drop->dir_x == 0 && drop->dir_y == 0) || 
+        drop->pos_x < 0 || drop->pos_y >= map_size - 1 || 
+        drop->pos_y < 0 || drop->pos_y >= map_size - 1) {
+        break;
     }
 
-    for (int i = 0; i < map_size * map_size; i++) {
-        brushWeights[i] /= weightSum;
+    // Find the droplet's new height and calculate the deltaHeight
+    struct interp_result new_result = { 0 };
+    interpolate(height_map, map_size, drop->pos_x, drop->pos_y, &new_result);
+    float newHeight = new_result.height;
+    float deltaHeight = newHeight - heightAndGradient.height;
+
+    // Calculate the droplet's sediment capacity (higher when moving fast down a slope and contains lots of water)
+    float sedimentCapacity = fmaxf(-deltaHeight 
+                                   * drop->speed 
+                                   * drop->water 
+                                   * SEDIMENT_CAPACITY_FACTOR, 
+                                  MIN_SEDIMENT_CAPACITY);
+
+    // If carrying more sediment than capacity, or if flowing uphill:
+    if (drop->sediment > sedimentCapacity || deltaHeight > 0) {
+      // If moving uphill (deltaHeight > 0) try fill up to the current height, otherwise deposit a fraction of the excess sediment
+      float amountToDeposit = (deltaHeight > 0) ? 
+                              fminf(deltaHeight, drop->sediment) : 
+                              (drop->sediment - sedimentCapacity) * DEPOSIT_SPEED;
+      // Update drop sediment amount
+      drop->sediment -= amountToDeposit;
+
+      // Add the sediment to the four nodes of the current cell using bilinear interpolation
+      // Deposition is not distributed over a radius (like erosion) so that it can fill small pits
+      height_map[dropletIndex] += amountToDeposit * (1 - cellOffsetX) * (1 - cellOffsetY);
+      height_map[dropletIndex + 1] += amountToDeposit * cellOffsetX * (1 - cellOffsetY);
+      height_map[dropletIndex + map_size] += amountToDeposit * (1 - cellOffsetX) * cellOffsetY;
+      height_map[dropletIndex + map_size + 1] += amountToDeposit * cellOffsetX * cellOffsetY;
     }
-}
+    else {
+      // Erode a fraction of the droplet's current carry capacity.
+      // Clamp the erosion to the change in height so that it doesn't dig a hole in the terrain behind the droplet
+      float amountToErode = fminf((sedimentCapacity - drop->sediment) * ERODE_SPEED, -deltaHeight);
+    
+      // Use erosion brush to erode from all nodes inside the droplet's erosion radius
+      // DEBUG: 
+      height_map[dropletIndex] += amountToErode;
+    
+    }
 
-
-/* frees brush indices and brush weights */
-void free_brush() {
-    free(brushIndices);
-    free(brushWeights);
+    // Update droplet's speed and water content
+    drop->speed =  sqrtf(drop->speed * drop->speed + deltaHeight * GRAVITY);
+    drop->water *= (1 - EVAPORATE_SPEED);
+  }
 }
 

@@ -19,6 +19,9 @@
 * AUTHOR :    Henry Jiang         DATE :    Feb 11, 2021
 */
 
+#ifndef HEIGHTMAP_GEN_H_
+#define HEIGHTMAP_GEN_H_
+
 struct setting {
     unsigned int seed;
     int octaves;
@@ -52,3 +55,5 @@ typedef struct setting* setting_t;
  *                      simplex noise generator
  */
 void gen_heightmap( float* height_map, int map_size, setting_t setting );
+
+#endif

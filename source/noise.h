@@ -19,6 +19,8 @@
 * AUTHOR :    Henry Jiang         DATE :    Feb 11, 2021
 */
 
+#ifndef NOISE_H_
+#define NOISE_H_
 
 /** 
  * @brief initialize the perm permutation array before using simplex noise
@@ -37,3 +39,5 @@ void init_perm( void );
  * @param yin input y coordinate
  */
 double noise( double xin, double yin );
+
+#endif

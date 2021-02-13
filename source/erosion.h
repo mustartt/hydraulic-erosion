@@ -22,7 +22,7 @@
 struct droplet {
     float pos_x, pos_y;
     float dir_x, dir_y;
-    float velocity;
+    float speed;
     float water;
     float sediment;
 };
