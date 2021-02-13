@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <math.h>
 
 #include "erosion.h"
 #include "export.h"
@@ -17,4 +18,10 @@ int main() {
     .water = 1,
     .sediment = 0
   };
+
+  int size = 128;
+  float* map = malloc(size * size * sizeof(float));
+
+  
+
 }
