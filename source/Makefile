@@ -3,7 +3,7 @@
 # later it will build to WASM and initiate streams with in the main page
 
 CC=clang
-CFLAGS=-lm -Wall
+CFLAGS=-Wall -Ofast
 
 OBJDIR=build
 
@@ -25,11 +25,11 @@ utils.o: export.c export.h
 test.o: test.c
 	$(CC) $(CFLAGS) -c test.c -o test.o
 
+
+
 .PHONY: clean
 clean:
-	rm erosion.o
-	rm noise.o
-	rm heightmap_gen.o
-	rm utils.o
-	rm test.o
+	rm *.o
 	rm output
+	rm *.png
+	rm *.obj

@@ -8,20 +8,47 @@
 #include "export.h"
 #include "heightmap_gen.h"
 
-int main() {
-  struct droplet drop = {
-    .pos_x = 32,
-    .pos_y = 32,
-    .dir_x = 0,
-    .dir_y = 0,
-    .speed = 1,
-    .water = 1,
-    .sediment = 0
-  };
+int main(int argc, char** argv) {
+  int size;
+  printf("Enter size: \n");
+  scanf("%d", &size);
+  int iter = size * size;
+  printf("Enter iterations (recommends %d): \n", iter);
+  scanf("%d", &iter);
 
-  int size = 128;
   float* map = malloc(size * size * sizeof(float));
 
-  
+  struct setting example = {
+    .seed = 12345,
+    .octaves = 6,
+    .persistence = 0.65f,
+    .height = 0.75,
+    .scale = 0.5
+  };
 
+  compute_weights_matrix(3);
+
+  gen_heightmap(map, size, &example);
+  export_png(map, size, "output_0.png");
+
+  for (int i = 0; i < iter; i++) {
+    struct droplet drop = {
+      .pos_x = rand() % size,
+      .pos_y = rand() % size,
+      .dir_x = 0,
+      .dir_y = 0,
+      .speed = 1,
+      .water = 1,
+      .sediment = 0
+    };
+
+    erode(map, size, &drop);
+  }
+
+  export_png(map, size, "output_1.png");
+  export_obj(map, size, 256, "output_1.obj");
+
+  free_weights_matrix();
+  free(map);
+  return 0;
 }

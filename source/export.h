@@ -45,7 +45,7 @@ void export_obj( float* heightmap, int map_size, int export_size, char* filename
  * 
  * Exports the @param heightmap with @param map_size with filename
  * @param filename. The exported file in the Virtual file system is 
- * in the .png image format [RGBA format]
+ * in the .png image format [RGB format]
  * 
  * @param heightmap the heightmap to export
  * @param map_size  the heightmap size

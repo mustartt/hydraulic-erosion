@@ -6,7 +6,9 @@
 *
 * PUBLIC FUNCTIONS :
 *       void    erode( float* height_map, int map_size, struct droplet* drop )
-*
+*       void    compute_weights_matrix( int radius )
+*       void    free_weights_matrix( void )
+*          
 * NOTES :
 *       Call create_brush before using erode with the same map_size
 *       Implements basic algorithm from Hans Theobald Beyer
@@ -46,25 +48,25 @@ void erode( float* height_map, int map_size, struct droplet* drop );
 
 
 /**
- * @brief Creates the brush for erode
+ * @brief Computes the weight matrix for simulating the droplet size
  * 
- * @param map_size   the size of the height_map buffer which is
- *                   the width of the heightmap
- * @param radius     the radius of the brush to be created
+ * Creates a weights matrix of radius @param radius with the 
+ * all entires in the matrix normalized w_i = w_i / w_sum 
  * 
- * [important] call this before calling erode. This function setsup the 
- *             internal state for the erode function
- *             before calling on a new heightmap, free_brush() must be called
- */ 
-void create_brush( int map_size, int radius );
-
+ * @param radius the radius of the weights matrix to be allocated
+ * 
+ * note: Computation time increase significantly with larger weighted matrix
+ *       size. Recommended to use size between 1 - 3     
+ *       assumes that caller calls @param free_weights_matrix
+ */
+void compute_weights_matrix( int radius );
 
 
 /**
- * @brief Frees the brush for erode
- * 
- * [important] must be called after finished with erode to avoid memory leak
+ * @brief Frees the weights matrix and set pts to NULL
  */
-void free_brush( void );
+void free_weights_matrix( void );
+
+
 
 #endif
