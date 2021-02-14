@@ -26,7 +26,6 @@ test.o: test.c
 	$(CC) $(CFLAGS) -c test.c -o test.o
 
 
-
 .PHONY: clean
 clean:
 	rm *.o

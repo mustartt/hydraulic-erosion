@@ -3,10 +3,12 @@
 #include <string.h>
 #include <stdbool.h>
 #include <math.h>
+#include <assert.h>
 
 #include "erosion.h"
 #include "export.h"
 #include "heightmap_gen.h"
+
 
 int main(int argc, char** argv) {
   int size, iter;
@@ -26,9 +28,9 @@ int main(int argc, char** argv) {
   struct setting example = {
     .seed = 12345,
     .octaves = 6,
-    .persistence = 0.65f,
+    .persistence = 0.5f,
     .height = 0.75,
-    .scale = 0.5
+    .scale = 0.1
   };
 
   compute_weights_matrix(2);
