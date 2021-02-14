@@ -8,12 +8,12 @@
 #include "erosion.h"
 #include "export.h"
 #include "heightmap_gen.h"
-
+#include "import.h"
 
 int main(int argc, char** argv) {
   int size, iter;
   if (argc > 1) {
-    size = 512;
+    size = 1024;
     iter = size * size;
   } else {
     printf("Enter size: \n");
