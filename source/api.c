@@ -33,7 +33,6 @@
 #include "heightmap_gen.h"
 #include "export.h"
 
-
 int     map_size;
 float*  heightmap = NULL;
 struct setting noise_param;
@@ -41,8 +40,32 @@ erosion_setting_t erode_param;
 
 void initialize(float* map, int sim_size) {
   // erosion: initalize heightmap
-  if (!map)
-    map = (float*) calloc(sim_size * sim_size, sizeof(float));
+  if (map == NULL) {
+    heightmap = (float*) calloc(sim_size * sim_size, sizeof(float));
+  }
+
+  map_size = sim_size;
+}
+
+void use_default_erosion_params(unsigned int seed, 
+                                int octaves, float persistence, 
+                                float scale, float map_height,
+                                int radius) {
+  free_weights_matrix(); /* assumes that radius param is different */
+                         /* and rebuilds the weights matrix for each set_param */
+
+  // configure heightmap generator noise settings
+  struct setting generator_param = {
+    .seed         = seed,
+    .octaves      = octaves,
+    .persistence  = persistence,
+    .scale        = scale,
+    .height       = map_height
+  };
+  noise_param = generator_param;
+
+  // recomputes the weights matrix for erosion
+  compute_weights_matrix(radius);
 }
 
 void set_parameters(/* heightmap gen params */
@@ -81,11 +104,15 @@ void set_parameters(/* heightmap gen params */
     .drop_radius = radius
   };
   erode_param = erosion_param;
+  write_settings(erode_param);
 
   // recomputes the weights matrix for erosion
   compute_weights_matrix(radius);
 }
 
+void generate_noise() {
+  gen_heightmap(heightmap, map_size, &noise_param);
+}
 
 void override_heightmap(float* new_heightmap) {
   if (heightmap) {
@@ -93,7 +120,6 @@ void override_heightmap(float* new_heightmap) {
   }
   heightmap = new_heightmap;
 }
-
 
 void erode_iter(int iterations) {
   srand(noise_param.seed); // sets seed
@@ -115,6 +141,11 @@ void erode_iter(int iterations) {
   }
 }
 
+void teardown() {
+  free_weights_matrix();
+  free(heightmap);
+  heightmap = NULL;
+}
 
 void save_obj(char* filename, int size) {
   export_obj(heightmap, map_size, size, filename);

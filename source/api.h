@@ -15,6 +15,10 @@
 *                    float deposit_speed, float erode_speed,
 *                    float evaporate_speed, float gravity,
 *                    int radius )
+*       void use_default_erosion_params( unsigned int seed, 
+                                         int octaves, float persistence, 
+                                         float scale, float map_height,
+                                         int radius )
 *       void override_heightmap( float* new_heightmap )
 *       void erode_iter( int iterations )
 *       void save_obj( char* filename, int size ) 
@@ -45,6 +49,20 @@ void set_parameters( unsigned int seed,
                      int radius );
 
 /**
+ * @brief Only initializes the noise generator settings and compute
+ *        and computes the erosion weights matrix
+ */
+void use_default_erosion_params(unsigned int seed, 
+                                int octaves, float persistence, 
+                                float scale, float map_height,
+                                int radius);
+
+/**
+ * @brief Generates noise onto the heightmap 
+ */
+void generate_noise( void );
+
+/**
  * @brief overrides the original heightmap and frees the old heightmap if alloced
  */
 void override_heightmap( float* new_heightmap );
@@ -68,3 +86,8 @@ void save_png( char* filename );
  * @brief Export the stl file 
  */
 void save_stl( char* filename );
+
+/**
+ * @brief frees allocated memory
+ */
+void teardown( void );

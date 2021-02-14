@@ -82,4 +82,9 @@ void compute_weights_matrix( int radius );
  */
 void free_weights_matrix( void );
 
+/**
+ * @brief Writes the erosion settings
+ */
+void write_settings( erosion_setting_t setting );
+
 #endif
