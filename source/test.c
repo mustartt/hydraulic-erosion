@@ -9,12 +9,17 @@
 #include "heightmap_gen.h"
 
 int main(int argc, char** argv) {
-  int size;
-  printf("Enter size: \n");
-  scanf("%d", &size);
-  int iter = size * size;
-  printf("Enter iterations (recommends %d): \n", iter);
-  scanf("%d", &iter);
+  int size, iter;
+  if (argc > 1) {
+    size = 512;
+    iter = size * size;
+  } else {
+    printf("Enter size: \n");
+    scanf("%d", &size);
+    iter = size * size;
+    printf("Enter iterations (recommends %d): \n", iter);
+    scanf("%d", &iter);
+  }
 
   float* map = malloc(size * size * sizeof(float));
 
@@ -26,7 +31,7 @@ int main(int argc, char** argv) {
     .scale = 0.5
   };
 
-  compute_weights_matrix(3);
+  compute_weights_matrix(2);
 
   gen_heightmap(map, size, &example);
   export_png(map, size, "output_0.png");
