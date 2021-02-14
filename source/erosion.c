@@ -94,17 +94,27 @@ void interpolate( float* height_map, int map_size, float pos_x, float pos_y,
     result->gradient_y = gradient_y;
 }
 
-#define DROPLET_LIFETIME    30
-#define INITAL_SPEED        1
-#define INITAL_WATERVOLUME  1
-#define INERTA              .05f
 
-#define SEDIMENT_CAPACITY_FACTOR  4
-#define MIN_SEDIMENT_CAPACITY     .01f
-#define DEPOSIT_SPEED             .3f
-#define ERODE_SPEED               .3f
-#define EVAPORATE_SPEED           .01f
-#define GRAVITY                   4
+/* default settings */
+int   DROPLET_LIFETIME          = 30;
+float INERTA                    = .05f;
+float SEDIMENT_CAPACITY_FACTOR  = 4;
+float MIN_SEDIMENT_CAPACITY     = .01f;
+float DEPOSIT_SPEED             = .3f;
+float ERODE_SPEED               = .3f;
+float EVAPORATE_SPEED           = .01f;
+float GRAVITY                   = 4;
+
+void write_settings(erosion_setting_t setting) {
+  DROPLET_LIFETIME          = setting.DROPLET_LIFETIME;
+  INERTA                    = setting.INERTA;
+  SEDIMENT_CAPACITY_FACTOR  = setting.SEDIMENT_CAPACITY_FACTOR;
+  MIN_SEDIMENT_CAPACITY     = setting.MIN_SEDIMENT_CAPACITY;
+  DEPOSIT_SPEED             = setting.DEPOSIT_SPEED;
+  ERODE_SPEED               = setting.ERODE_SPEED;
+  EVAPORATE_SPEED           = setting.EVAPORATE_SPEED;
+  GRAVITY                   = setting.GRAVITY;
+}
 
 /* interal states for the weights matrix */
 float* weights;
@@ -156,8 +166,10 @@ void compute_weights_matrix(int radius) {
   }
 }
 
+/* frees the weights matrix */
 void free_weights_matrix() {
-  free(weights);
+  if (weights)
+    free(weights);
   weights = NULL;
 }
 
@@ -227,8 +239,10 @@ void erode( float* height_map, int map_size, struct droplet* drop ) {
     }
     else {
       // Erode a fraction of the droplet's current carry capacity.
-      // Clamp the erosion to the change in height so that it doesn't dig a hole in the terrain behind the droplet
-      float amount_to_erode = fminf((sediment_capacity - drop->sediment) * ERODE_SPEED, -delta_height);
+      // Clamp the erosion to the change in height so that it doesn't 
+      // dig a hole in the terrain behind the droplet
+      float amount_to_erode = fminf((sediment_capacity - drop->sediment) * ERODE_SPEED,
+                                    -delta_height);
     
       // Use erosion brush to erode from all nodes inside the droplet's erosion radius
       int offset = weights_radius;
