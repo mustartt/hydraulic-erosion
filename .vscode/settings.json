@@ -1,5 +1,5 @@
 {
-    "files.associations": {
-        "erosion.h": "c"
-    }
+  "files.associations": {
+    "emscripten.h": "c"
+  }
 }

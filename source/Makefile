@@ -2,12 +2,12 @@
 # use make web for emcc to WASM
 # use make local for clang to local executable
 
-web:
+wasm:
 	make -f makefile-emcc.mk
 
 local:
 	make -f makefile-clang.mk
 
 clean:
-	make -f makefile-clang.mk clean
-	make -f makefile-emcc.mk clean
+	-make -f makefile-clang.mk clean
+	-make -f makefile-emcc.mk clean

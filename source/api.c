@@ -33,11 +33,19 @@
 #include "heightmap_gen.h"
 #include "export.h"
 
+#ifdef _WASM
+#include "emscripten.h"
+#endif
+
 int     map_size;
 float*  heightmap = NULL;
 struct setting noise_param;
 erosion_setting_t erode_param;
 
+
+#ifdef _WASM
+EMSCRIPTEN_KEEPALIVE
+#endif
 void initialize(float* map, int sim_size) {
   // erosion: initalize heightmap
   if (map == NULL) {
@@ -47,6 +55,10 @@ void initialize(float* map, int sim_size) {
   map_size = sim_size;
 }
 
+
+#ifdef _WASM
+EMSCRIPTEN_KEEPALIVE
+#endif
 void use_default_erosion_params(unsigned int seed, 
                                 int octaves, float persistence, 
                                 float scale, float map_height,
@@ -68,6 +80,10 @@ void use_default_erosion_params(unsigned int seed,
   compute_weights_matrix(radius);
 }
 
+
+#ifdef _WASM
+EMSCRIPTEN_KEEPALIVE
+#endif
 void set_parameters(/* heightmap gen params */
                     unsigned int seed, 
                     int octaves, float persistence, 
@@ -110,10 +126,18 @@ void set_parameters(/* heightmap gen params */
   compute_weights_matrix(radius);
 }
 
+
+#ifdef _WASM
+EMSCRIPTEN_KEEPALIVE
+#endif
 void generate_noise() {
   gen_heightmap(heightmap, map_size, &noise_param);
 }
 
+
+#ifdef _WASM
+EMSCRIPTEN_KEEPALIVE
+#endif
 void override_heightmap(float* new_heightmap) {
   if (heightmap) {
     free(heightmap);
@@ -121,6 +145,10 @@ void override_heightmap(float* new_heightmap) {
   heightmap = new_heightmap;
 }
 
+
+#ifdef _WASM
+EMSCRIPTEN_KEEPALIVE
+#endif
 void erode_iter(int iterations) {
   srand(noise_param.seed); // sets seed
   
@@ -141,20 +169,37 @@ void erode_iter(int iterations) {
   }
 }
 
+
+#ifdef _WASM
+EMSCRIPTEN_KEEPALIVE
+#endif
 void teardown() {
   free_weights_matrix();
   free(heightmap);
   heightmap = NULL;
 }
 
+
+#ifdef _WASM
+EMSCRIPTEN_KEEPALIVE
+#endif
 void save_obj(char* filename, int size) {
   export_obj(heightmap, map_size, size, filename);
 }
 
+
+#ifdef _WASM
+EMSCRIPTEN_KEEPALIVE
+#endif
 void save_png(char* filename) {
   export_png(heightmap, map_size, filename);
 }
 
+
+
+#ifdef _WASM
+EMSCRIPTEN_KEEPALIVE
+#endif
 void save_stl(char* filename) {
   export_stl(heightmap, map_size, filename);
 }

@@ -33,7 +33,7 @@ import.o: import.c import.h
 
 .PHONY: clean
 clean:
-	rm *.o
-	rm output
-	rm *.png
-	rm *.obj
+	-rm *.o
+	-rm output
+	-rm *.png
+	-rm *.obj
