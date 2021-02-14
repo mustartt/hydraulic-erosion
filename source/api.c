@@ -5,8 +5,21 @@
 *       The main API file for interacting with the erosion simulator.
 *
 * PUBLIC FUNCTIONS :
-*          
-* NOTES :
+*       void initialize( float* map, int sim_size )
+*       void set_parameters(
+*                    unsigned int seed, 
+*                    int octaves, float persistence, 
+*                    float scale, float map_height,
+*                    int droplet_life, float inertia,
+*                    float sediment_capacity, float min_sediment_capacity,
+*                    float deposit_speed, float erode_speed,
+*                    float evaporate_speed, float gravity,
+*                    int radius )
+*       void override_heightmap( float* new_heightmap )
+*       void erode_iter( int iterations )
+*       void save_obj( char* filename, int size ) 
+*       void save_png( char* filename )
+*       void save_stl(char* filename)
 *
 * AUTHOR :    Henry Jiang         DATE :    Feb 13, 2021
 */
