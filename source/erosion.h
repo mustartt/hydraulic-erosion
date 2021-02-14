@@ -29,6 +29,21 @@ struct droplet {
     float sediment;
 };
 
+
+typedef struct {
+  int   DROPLET_LIFETIME;
+  float INERTA;
+  float SEDIMENT_CAPACITY_FACTOR;
+  float MIN_SEDIMENT_CAPACITY;
+  float DEPOSIT_SPEED;
+  float ERODE_SPEED;
+  float EVAPORATE_SPEED;
+  float GRAVITY;
+  int   drop_radius;
+} erosion_setting_t;
+
+
+
 /**
  * @brief Calculates the erosion of a single droplet on the height map
  * 
@@ -66,7 +81,5 @@ void compute_weights_matrix( int radius );
  * @brief Frees the weights matrix and set pts to NULL
  */
 void free_weights_matrix( void );
-
-
 
 #endif
