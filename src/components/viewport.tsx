@@ -28,15 +28,19 @@ const Box: React.FC<MeshProps> = (props) => {
   )
 }
 
+/* 
+<ambientLight intensity={0.3}/>
+<pointLight 
+  position={[10, 10, 10]} />
+<Box position={[0, 0, 0]} />
+*/
 
 const Viewport = () => {
   return (
     <div className="viewport">
       <Canvas>
-        <ambientLight intensity={0.3}/>
-        <pointLight 
-          position={[10, 10, 10]} />
-        <Box position={[0, 0, 0]} />
+        
+        
         
       </Canvas>
     </div>

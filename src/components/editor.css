@@ -4,4 +4,12 @@
     width: 25vw;
     min-width: 275px;
     max-width: 325px;
+
+    overflow-y: scroll;
+}
+
+
+.prop-pane {
+  margin: 5px;
+  padding: 5px;
 }

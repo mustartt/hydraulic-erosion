@@ -12,20 +12,20 @@ import Actions from './editor-elements/editor-actions'
 const Editor = () => {
     return (
         <div className="editor-pane">
-            <Paper>
+            <Paper className="prop-pane">
                 <Typography variant="h4">Settings</Typography>
                 <Starting></Starting>
             </Paper>
-            <Paper>
+            <Paper className="prop-pane">
                 <NoiseEditor></NoiseEditor>
             </Paper>
-            <Paper>
+            <Paper className="prop-pane">
                 <SimEditor></SimEditor>
             </Paper>
-            <Paper>
+            <Paper className="prop-pane">
                 <ViewEditor></ViewEditor>
             </Paper>
-            <Paper>
+            <Paper className="prop-pane">
                 <Actions></Actions>
             </Paper>
         </div>
