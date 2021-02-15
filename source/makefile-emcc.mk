@@ -8,8 +8,9 @@ output.js: api.o erosion.o noise.o heightmap_gen.o utils.o
 		-s EXPORTED_FUNCTIONS='["_calloc", "_malloc", "_free"]' \
 		-s WASM=1 \
 		-s EXPORTED_RUNTIME_METHODS='["ccall","cwrap"]' \
-		-s EXTRA_EXPORTED_RUNTIME_METHODS=["getValue"] \
-		-s NO_EXIT_RUNTIME=1
+		-s 'EXTRA_EXPORTED_RUNTIME_METHODS=["FS"]' \
+		-s NO_EXIT_RUNTIME=1 \
+		-s ENVIRONMENT='web' 
 
 # build object files
 api.o: api.c api.h

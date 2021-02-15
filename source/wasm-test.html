@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <tile>WASM Testing</tile>
+  </head>
+  <body>
+    <script src="./output.js"></script>
+    <script>
+
+      function download(filename, mime) {
+        mime = mime || "application/octet-stream";
+
+        let content = Module.FS.readFile(filename);
+        console.log(`Offering download of "${filename}", with ${content.length} bytes.`);
+        var a = document.createElement('a');
+        a.download = filename;
+        a.href = URL.createObjectURL(new Blob([content], {type: mime}));
+        a.style.display = 'none';
+
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(a.href);
+        }, 2000);
+      }
+
+      Module.onRuntimeInitialized = () => {
+        const api = {
+          version:    Module.cwrap('version', 'number', []),
+          initialize: Module.cwrap('initialize', null, ['number', 'number']),
+          use_default_erosion: Module.cwrap('use_default_erosion_params', null, ['number',    'number', 'number', 'number', 'number', 'number']),
+          generate_noise: Module.cwrap('generate_noise', null, []),
+          override_heightmap: Module.cwrap('override_heightmap', null, ['number']),
+          erode_iter: Module.cwrap('erode_iter', null, ['number']),
+          save_png: Module.cwrap('save_png', null, ['string']),
+          teardown: Module.cwrap('teardown', null, []),
+        }
+        
+        console.log("Started");
+
+        api.initialize(null, 512);
+        api.use_default_erosion(12345, 5, 0.45, 3, 1, 2);
+        api.generate_noise();
+        api.erode_iter(512 * 512 * 10);
+        api.save_png("output_0.png");
+
+        console.log("Ended");
+
+        download("output_0.png");
+        //download("output_1.png");
+      };
+    </script>
+  </body>
+</html>
