@@ -155,8 +155,8 @@ void erode_iter(int iterations) {
   for (int i = 0; i < iterations; i++) {
     // randomize droplet's position
     struct droplet drop = {
-      .pos_x = rand() % map_size,
-      .pos_y = rand() % map_size,
+      .pos_x = (rand() % (map_size - 2)) + 1,
+      .pos_y = (rand() % (map_size - 2)) + 1,
       .dir_x = 0,
       .dir_y = 0,
       .speed = 1,
