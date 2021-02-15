@@ -11,3 +11,7 @@ local:
 clean:
 	-make -f makefile-clang.mk clean
 	-make -f makefile-emcc.mk clean
+
+clean-win:
+	-make -f makefile-clang.mk clean-win
+	-make -f makefile-emcc.mk clean-win

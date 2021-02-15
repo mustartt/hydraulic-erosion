@@ -29,7 +29,7 @@ utils.o: export.c export.h
 	$(CC) $(CFLAGS) -c export.c -o utils.o
 
 
-.PHONY: clean
+.PHONY: clean clean-win
 clean:
 	-rm *.o
 	-rm *.wasm
@@ -37,3 +37,11 @@ clean:
 	-rm output
 	-rm *.png
 	-rm *.obj
+
+clean-win:
+	-del /Q /S *.o
+	-del /Q /S *.png
+	-del /Q /S *.obj
+	-del /Q /S *.stl
+	-del /Q /S *.wasm
+	-del /Q /S *.js

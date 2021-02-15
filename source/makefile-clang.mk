@@ -38,10 +38,18 @@ test.o: test.c
 	$(CC) $(CFLAGS) -c test.c -o test.o
 
 
-
-.PHONY: clean
+.PHONY: clean clean-win
 clean:
 	-rm *.o
 	-rm output
 	-rm *.png
 	-rm *.obj
+
+clean-win:
+	-del /Q /S *.o
+	-del /Q /S *.png
+	-del /Q /S *.obj
+	-del /Q /S *.stl
+	-del /Q /S output
+
+
