@@ -152,11 +152,21 @@ EMSCRIPTEN_KEEPALIVE
 void erode_iter(int iterations) {
   srand(noise_param.seed); // sets seed
   
+  printf("Starting Erosion: %d Iterations.\n", iterations);
+
+  int delta = iterations / 100;
+
   for (int i = 0; i < iterations; i++) {
+    
+    if (i % delta == 0) {
+      int percent = (i * 100) / iterations;
+      printf("Progress: %d/100.\n", percent);
+    }
+
     // randomize droplet's position
     struct droplet drop = {
-      .pos_x = rand() % map_size,
-      .pos_y = rand() % map_size,
+      .pos_x = (rand() % (map_size - 2)) + 1,
+      .pos_y = (rand() % (map_size - 2)) + 1,
       .dir_x = 0,
       .dir_y = 0,
       .speed = 1,
