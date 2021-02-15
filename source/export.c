@@ -29,6 +29,7 @@
 // Uncompressed PNG Library
 #include "svpng.c"
 
+#define EXPORT_MSG "# Exported from Hydraulic Erosion https://github.com/mustartt/hydraulic-erosion"
 
 float* read_map(char* filename, int size) {
   FILE* file = fopen(filename, "r");
@@ -73,6 +74,7 @@ void export_obj(float* heightmap, int map_size, int export_size, char* filename)
   int export_scale = map_size / export_size; 
 
   FILE* fp = fopen(filename, "w");
+  fprintf(fp, EXPORT_MSG);
   fprintf(fp, "# List of geometric vertices coordinate (x, y, z)\n");
 
   // format is "v coord_x, coord_y, coord_z"
@@ -170,21 +172,23 @@ void print_vec(vec3 vec) {
   printf("vec: %f %f %f\n", vec.x, vec.y, vec.z);
 }
 
+void write_vec(vec3* vec, FILE* fp) {
+  fwrite(vec, sizeof(vec3), 1, fp);
+}
+
 void export_stl(float* heightmap, int map_size, char* filename) {
   FILE* fp = fopen(filename, "wb");
   
   if (fp == NULL)
     return;
 
-  printf("Exporting to STL Format...\n");
-
   // Header
-  uint8_t  header[80] = "Hello World STL FILE";
-  uint32_t vertex_count = 2 * (map_size - 1) * (map_size - 1);
-  uint32_t vertex_buffer[1] = { vertex_count };
+  uint8_t  header[80] = EXPORT_MSG;
+  uint32_t face_count = 2 * (map_size - 1) * (map_size - 1);
+  uint16_t attr_buffer[1] = { 0 };
 
   fwrite(header, sizeof(uint8_t), 80, fp);
-  fwrite(vertex_buffer, sizeof(uint32_t), 1, fp); 
+  fwrite(&face_count, sizeof(uint32_t), 1, fp); 
 
   // v1 is top-left, v2 is top-right, v3 is bottom-right, v4 is bottom-left
   for (int z = 0; z < map_size - 1; z++) {
@@ -195,31 +199,40 @@ void export_stl(float* heightmap, int map_size, char* filename) {
       float sample3 = heightmap[(z + 1) * map_size + (x + 1)];
       float sample4  = heightmap[(z + 1) * map_size + x];
 
-      vec3 v1 = { (float) x / map_size,       sample1, (float) z / map_size };
-      vec3 v2 = { (float) (x + 1) / map_size, sample2, (float) z / map_size };
-      vec3 v3 = { (float) (x + 1) / map_size, sample3, (float) (z + 1) / map_size };
-      vec3 v4 = { (float) x / map_size,       sample4, (float) (z + 1) / map_size };
+      vec3 v1 = { (float) x / (map_size - 1),       sample1, (float) z / (map_size - 1)};
+      vec3 v2 = { (float) (x + 1) / (map_size - 1), sample2, (float) z / (map_size - 1)};
+      vec3 v3 = { (float) (x + 1) / (map_size - 1), sample3, (float) (z + 1) / (map_size - 1)};
+      vec3 v4 = { (float) x / (map_size - 1),       sample4, (float) (z + 1) / (map_size - 1)};
       
-      // BUG: INCORRECT VECTOR SUBTRACTION RESULTS
       // triangle 1 -> 124
       vec3 edge21, edge41, normal1;
       subtract(&v2, &v1, &edge21);
       subtract(&v4, &v1, &edge41);
-      cross_product(&edge21, &edge41, &normal1);
-      
+      cross_product(&edge41, &edge21, &normal1);
+
       // triangel 2 -> 234
       vec3 edge23, edge43, normal2; 
       subtract(&v2, &v3, &edge23);
       subtract(&v4, &v3, &edge43);
       cross_product(&edge23, &edge43, &normal2);
-
-      // write normal1
-      // write v1 v2 v4
-      // write uint16_t attribute byte of 0
       
-      // write normal2
-      // write v2 v3 v4
+      // write normal1
+      write_vec(&normal1, fp);
+      // write v1 v2 v4
+      write_vec(&v1, fp);
+      write_vec(&v2, fp);
+      write_vec(&v4, fp);
       // write uint16_t attribute byte of 0
+      fwrite(attr_buffer, sizeof(uint16_t), 1, fp);
+
+      // write normal2
+      write_vec(&normal2, fp);
+      // write v2 v3 v4
+      write_vec(&v2, fp);
+      write_vec(&v3, fp);
+      write_vec(&v4, fp);
+      // write uint16_t attribute byte of 0
+      fwrite(attr_buffer, sizeof(uint16_t), 1, fp);
     }
   }
 
