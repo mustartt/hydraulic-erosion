@@ -13,6 +13,17 @@ const theme = createMuiTheme({
   }
 });
 
+function tests(){
+
+    const [noise, setNoise] = useState(0)
+    
+    return(
+    <div>
+    <button onClick = {() => setNoise(70 * (noise +1))}> Noise <noise> </button>
+    <div>
+    )
+}
+
 const App = () => {
   return (
     <div className="app-container">
