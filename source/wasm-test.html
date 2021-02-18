@@ -4,52 +4,52 @@
     <tile>WASM Testing</tile>
   </head>
   <body>
-    <script src="./output.js"></script>
-    <script>
+    <script type="module">
 
-      function download(filename, mime) {
-        mime = mime || "application/octet-stream";
+    import MainModule from '/output.js'
+    const Module = MainModule();
+    let module;
 
-        let content = Module.FS.readFile(filename);
-        console.log(`Offering download of "${filename}", with ${content.length} bytes.`);
-        var a = document.createElement('a');
-        a.download = filename;
-        a.href = URL.createObjectURL(new Blob([content], {type: mime}));
-        a.style.display = 'none';
+    function download(filename, mime) {
+      mime = mime || "application/octet-stream";
 
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(() => {
-          document.body.removeChild(a);
-          URL.revokeObjectURL(a.href);
-        }, 2000);
-      }
+      let content = module.FS.readFile(filename);
+      console.log(`Offering download of "${filename}", with ${content.length} bytes.`);
+      var a = document.createElement('a');
+      a.download = filename;
+      a.href = URL.createObjectURL(new Blob([content], {type: mime}));
+      a.style.display = 'none';
 
-      Module.onRuntimeInitialized = () => {
-        const api = {
-          version:    Module.cwrap('version', 'number', []),
-          initialize: Module.cwrap('initialize', null, ['number', 'number']),
-          use_default_erosion: Module.cwrap('use_default_erosion_params', null, ['number',    'number', 'number', 'number', 'number', 'number']),
-          generate_noise: Module.cwrap('generate_noise', null, []),
-          override_heightmap: Module.cwrap('override_heightmap', null, ['number']),
-          erode_iter: Module.cwrap('erode_iter', null, ['number']),
-          save_png: Module.cwrap('save_png', null, ['string']),
-          teardown: Module.cwrap('teardown', null, []),
-        }
-        
-        console.log("Started");
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(a.href);
+      }, 2000);
+    }
 
-        api.initialize(null, 512);
-        api.use_default_erosion(12345, 5, 0.45, 3, 1, 2);
-        api.generate_noise();
-        api.erode_iter(512 * 512 * 10);
-        api.save_png("output_0.png");
+    Module.then(mod => {
+      module = mod;
+      const version = mod.cwrap('version', 'number', []);
+      const create_map = mod.cwrap('initialize', 'number', ['number']);
+      const default_erosion_param = mod.cwrap('use_default_erosion_params', null, 
+          ['number', 'number', 'number', 'number', 'number']);
+      const generate_noise = mod.cwrap('generate_noise', null, []);
+      const erode = mod.cwrap('erode_iter', null, ['number', 'number']);
+      const save_png = mod.cwrap('save_png', null, ['string']);      
 
-        console.log("Ended");
+      console.log(version());
+      create_map(512);
+      default_erosion_param(1, 4, 0.45, 1, 1);
+      generate_noise();
+      erode(512 * 512, 3);
+      save_png("output.png");
+      download("output.png", null);
 
-        download("output_0.png");
-        //download("output_1.png");
-      };
+    });
+
+    
+
     </script>
   </body>
 </html>

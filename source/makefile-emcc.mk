@@ -16,7 +16,7 @@ output.js: api.o erosion.o noise.o heightmap_gen.o utils.o
 		-s EXPORTED_RUNTIME_METHODS='["ccall","cwrap"]' \
 		-s 'EXTRA_EXPORTED_RUNTIME_METHODS=["FS","getValue","setValue"]' \
 		-s NO_EXIT_RUNTIME=1 \
-		-s ENVIRONMENT='web' 
+		-s ENVIRONMENT='web' \
 
 # build object files
 api.o: api.c api.h

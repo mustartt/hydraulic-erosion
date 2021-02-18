@@ -148,9 +148,9 @@ void free_heightmap() {
 EMSCRIPTEN_KEEPALIVE
 #endif
 void erode_iter(int iterations, int radius) {
+  printf("Starting with %d iterations with radius %d.\n", iterations, radius);
   // computes the weights matrix only before erosion
   compute_weights_matrix(radius);
-
   for (int i = 0; i < iterations; i++) {
     // randomize droplet's position
     struct droplet drop = {
@@ -169,6 +169,7 @@ void erode_iter(int iterations, int radius) {
 
   // frees the weights matrix after erosion
   free_weights_matrix();
+  printf("Finished.");
 }
 
 

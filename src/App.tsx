@@ -1,12 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import './App.css';
 import { createMuiTheme, ThemeProvider } from '@material-ui/core';
 import { NoiseParam, ErosionParam, ViewportParam, EditorParam } from './setting-types';
 import Editor from './components/editor';
 import Viewport from './components/viewport';
 
+/* wasm module */
 import MainModule from './output';
-import { read } from 'fs';
 const Module = MainModule();
 
 // Use Material UI Dark theme
@@ -33,7 +33,7 @@ const defaultErosionParam: ErosionParam = {
   min_sediment_capacity_factor: 0.01,
   deposit_speed: 0.3,
   erode_speed: 0.3,
-  evaporate_speed: 0.1,
+  evaporate_speed: 0.01,
   gravity: 4,
   drop_radius: 3
 };
@@ -43,6 +43,8 @@ const defaultViewportParam: ViewportParam = {
   map_size: 512,
   output_height: 0.5
 };
+
+
 
 
 const App = () => {  
@@ -67,7 +69,7 @@ const App = () => {
         sample: module.cwrap('sample', null, ['number', 'number']),
         // use default erosion. Set noise param
         default_erosion_param: module.cwrap('use_default_erosion_params', null, 
-          ['number', 'number', 'number', 'number']),
+          ['number', 'number', 'number', 'number', 'number']),
         // set full param <- Always use this
         set_param: module.cwrap('set_parameters', null, 
           ['number', 'number', 'number', 'number', 'number', 'number', 'number', 
@@ -82,22 +84,38 @@ const App = () => {
         save_obj: module.cwrap('save_obj', null, ['string', 'number']),
         save_png: module.cwrap('save_png', null, ['string']),
         save_stl: module.cwrap('save_stl', null, ['string']),
+        download: (filename: string) => {
+          let mime = "application/octet-stream";
+          let content = module.FS.readFile(filename);
+          console.log(`Offering download of "${filename}", with ${content.length} bytes...`);
+        
+          var a = document.createElement('a');
+          a.download = filename;
+          a.href = URL.createObjectURL(new Blob([content], {type: mime}));
+          a.style.display = 'none';
+        
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(a.href);
+          }, 2000);
+        }
       };      
 
-      // BUG: Top half of the heightmap has a blackbar over it
       api_obj.create_map(viewportParam.map_size);
-      api_obj.set_param(noiseParam.seed, noiseParam.octaves, noiseParam.persistence,
-                        noiseParam.scale, noiseParam.height,
-                        erosionParam.droplet_lifetime, erosionParam.inertia, 
-                        erosionParam.sediment_capacity_factor, 
-                        erosionParam.sediment_capacity_factor,
-                        erosionParam.deposit_speed, 
-                        erosionParam.erode_speed,
-                        erosionParam.evaporate_speed,
-                        erosionParam.gravity);
-
+      api_obj.set_param(noiseParam.seed, noiseParam.octaves, 
+        noiseParam.persistence,
+        noiseParam.scale, noiseParam.height,
+        erosionParam.droplet_lifetime, erosionParam.inertia, 
+        erosionParam.sediment_capacity_factor, 
+        erosionParam.min_sediment_capacity_factor,
+        erosionParam.deposit_speed, 
+        erosionParam.erode_speed,
+        erosionParam.evaporate_speed,
+        erosionParam.gravity);
       api_obj.generate_noise();
-      
+
       setAPI(api_obj);
       setModule(module);
       setReady(true);
@@ -120,7 +138,7 @@ const App = () => {
       newNoiseParam.scale, newNoiseParam.height,
       erosionParam.droplet_lifetime, erosionParam.inertia, 
       erosionParam.sediment_capacity_factor, 
-      erosionParam.sediment_capacity_factor,
+      erosionParam.min_sediment_capacity_factor,
       erosionParam.deposit_speed, 
       erosionParam.erode_speed,
       erosionParam.evaporate_speed,
@@ -132,7 +150,9 @@ const App = () => {
 
   const handleErosionUpdate = (param: ErosionParam) : void => {
     const newErosionParam = {...param};
-    
+    // discard any erosion change
+    // regenerate based on noise param
+
     setErosionParam(newErosionParam);
   };
 
@@ -160,9 +180,29 @@ const App = () => {
     ready: ready
   }
 
+  const [running, setRunning] = useState<boolean>();
+  const count_iterations = useRef<number>(0);
+
   return (
     <div className="app-container">
       <ThemeProvider theme={theme}>
+        {/*<button onClick={() => {
+
+          console.log(erosionParam);
+          console.log(noiseParam);
+          
+          api.set_param(1, 4, 0.45, 1, 1, 30, 0.05, 4, 0.01, 0.1, 0.1, 0.01, 4);
+          api.generate_noise();
+
+          console.log("Starting Erosion.");
+          console.time('erode');
+          api.erode(512 * 512 * 3, 3);
+          console.timeEnd('erode');
+
+          api.save_png('output.png');
+          api.download('output.png');
+
+        }}>Run</button>*/}
         <Viewport {...viewportProps}></Viewport>
         <Editor {...props}></Editor>
       </ThemeProvider>
