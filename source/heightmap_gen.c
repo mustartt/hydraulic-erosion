@@ -51,7 +51,7 @@ void gen_heightmap(float* height_map, int map_size, setting_t setting) {
   srand(setting->seed);
   float weight = 1.0f;
   float scale = setting->scale * map_size;
-
+  
   for (int oct = 0; oct < setting->octaves; oct++) {
     // layer noise with decreasing scale and weight
     write_single(height_map, map_size, scale, weight);

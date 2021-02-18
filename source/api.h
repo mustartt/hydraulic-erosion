@@ -34,7 +34,7 @@
  * @param map       passing a pre-existing heightmap. calloc if map is NULL
  * @param sim_size  the size of the heightmap
  */
-void initialize( float* map, int sim_size );
+float* initialize( float* map, int sim_size );
 
 /**
  * @brief Initalizes the simulation parameters
@@ -61,6 +61,11 @@ void use_default_erosion_params(unsigned int seed,
  * @brief Generates noise onto the heightmap 
  */
 void generate_noise( void );
+
+/**
+ * @brief Samples the height map at @param x and @param y
+ */
+float sample(int x, int y);
 
 /**
  * @brief overrides the original heightmap and frees the old heightmap if alloced

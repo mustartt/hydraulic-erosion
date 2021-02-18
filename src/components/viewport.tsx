@@ -1,48 +1,51 @@
-import React, { useRef } from "react";
-import { Canvas, MeshProps, useFrame } from "react-three-fiber";
-import { Mesh } from "three";
+import React, { useEffect, useRef } from "react";
+import './viewport.css'
 
-import "./viewport.css";
+import { ViewportParam } from '../setting-types';
 
-import TerrainMesh from './viewport-components/terrain-mesh'
+interface ViewportProps {
+  api: any,
+  viewportParam: ViewportParam,
+  ready: boolean
+};
 
-// testing:
-const Box: React.FC<MeshProps> = (props) => {
-  const mesh = useRef<Mesh>();
+const ImageViewer: React.FC<ViewportProps> = (props) => {
+  const {ready, api, viewportParam} = props;
+  const size = viewportParam.map_size;
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  useFrame(() => {
-    if (mesh.current) {
-      mesh.current.rotation.x += 0.005
-      mesh.current.rotation.y += 0.005
+  useEffect(() => {
+    const context = canvasRef.current?.getContext('2d')
+    if (context) {
+      if (ready) {
+        let imageData = context.createImageData(size, size);
+        for (let x = 0; x < size; x++) {
+          for (let y = 0; y < size; y++) {
+            let i = (y * size + x) * 4; // RGBA 
+            let value = api.sample(x, y) * 255;
+            //let value = 128;
+            imageData.data[i] = value;
+            imageData.data[i + 1] = value;
+            imageData.data[i + 2] = value;
+            imageData.data[i + 3] = 255;
+          }
+        }
+
+        context.putImageData(imageData, 0, 0);
+      } else {
+        context.fillStyle = '#ff0000';
+        context.fillRect(0, 0, context.canvas.width, context.canvas.height);
+      }
     }
   });
 
-  return (
-    <mesh
-      {...props}
-      ref={mesh}
-      scale={[1,1,1]}>
-      <boxBufferGeometry args={[1,1,1]} />
-      <meshStandardMaterial color={'orange'}/>
-    </mesh>
-  )
+  return <canvas ref={canvasRef} width={size} height={size} />;
 }
 
-/* 
-<ambientLight intensity={0.3}/>
-<pointLight 
-  position={[10, 10, 10]} />
-<Box position={[0, 0, 0]} />
-*/
-
-const Viewport = () => {
+const Viewport: React.FC<ViewportProps> = (props) => {
   return (
     <div className="viewport">
-      <Canvas>
-        
-        
-        
-      </Canvas>
+      <ImageViewer {...props}></ImageViewer>
     </div>
     );
 };

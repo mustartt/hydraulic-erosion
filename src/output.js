@@ -600,8 +600,9 @@ function hasPrefix(str, prefix) {
  return String.prototype.startsWith ? str.startsWith(prefix) : str.indexOf(prefix) === 0;
 }
 
-var wasmBinaryFile = "/output.wasm";
 
+
+var wasmBinaryFile = "/output.wasm";
 
 const getBinaryPromise = () => new Promise((resolve, reject) => {
   fetch(wasmBinaryFile, { credentials: 'same-origin' })
@@ -626,7 +627,7 @@ function createWasm() {
   Module["asm"] = exports;
   wasmMemory = Module["asm"]["s"];
   updateGlobalBufferAndViews(wasmMemory.buffer);
-  wasmTable = Module["asm"]["K"];
+  wasmTable = Module["asm"]["L"];
   removeRunDependency("wasm-instantiate");
  }
  addRunDependency("wasm-instantiate");
@@ -3965,56 +3966,60 @@ var _free = Module["_free"] = function() {
  return (_free = Module["_free"] = Module["asm"]["A"]).apply(null, arguments);
 };
 
+var _sample = Module["_sample"] = function() {
+ return (_sample = Module["_sample"] = Module["asm"]["B"]).apply(null, arguments);
+};
+
 var _erode_iter = Module["_erode_iter"] = function() {
- return (_erode_iter = Module["_erode_iter"] = Module["asm"]["B"]).apply(null, arguments);
+ return (_erode_iter = Module["_erode_iter"] = Module["asm"]["C"]).apply(null, arguments);
 };
 
 var _teardown = Module["_teardown"] = function() {
- return (_teardown = Module["_teardown"] = Module["asm"]["C"]).apply(null, arguments);
+ return (_teardown = Module["_teardown"] = Module["asm"]["D"]).apply(null, arguments);
 };
 
 var _save_obj = Module["_save_obj"] = function() {
- return (_save_obj = Module["_save_obj"] = Module["asm"]["D"]).apply(null, arguments);
+ return (_save_obj = Module["_save_obj"] = Module["asm"]["E"]).apply(null, arguments);
 };
 
 var _save_png = Module["_save_png"] = function() {
- return (_save_png = Module["_save_png"] = Module["asm"]["E"]).apply(null, arguments);
+ return (_save_png = Module["_save_png"] = Module["asm"]["F"]).apply(null, arguments);
 };
 
 var _save_stl = Module["_save_stl"] = function() {
- return (_save_stl = Module["_save_stl"] = Module["asm"]["F"]).apply(null, arguments);
+ return (_save_stl = Module["_save_stl"] = Module["asm"]["G"]).apply(null, arguments);
 };
 
 var _version = Module["_version"] = function() {
- return (_version = Module["_version"] = Module["asm"]["G"]).apply(null, arguments);
+ return (_version = Module["_version"] = Module["asm"]["H"]).apply(null, arguments);
 };
 
 var _malloc = Module["_malloc"] = function() {
- return (_malloc = Module["_malloc"] = Module["asm"]["H"]).apply(null, arguments);
+ return (_malloc = Module["_malloc"] = Module["asm"]["I"]).apply(null, arguments);
 };
 
 var ___getTypeName = Module["___getTypeName"] = function() {
- return (___getTypeName = Module["___getTypeName"] = Module["asm"]["I"]).apply(null, arguments);
+ return (___getTypeName = Module["___getTypeName"] = Module["asm"]["J"]).apply(null, arguments);
 };
 
 var ___embind_register_native_and_builtin_types = Module["___embind_register_native_and_builtin_types"] = function() {
- return (___embind_register_native_and_builtin_types = Module["___embind_register_native_and_builtin_types"] = Module["asm"]["J"]).apply(null, arguments);
+ return (___embind_register_native_and_builtin_types = Module["___embind_register_native_and_builtin_types"] = Module["asm"]["K"]).apply(null, arguments);
 };
 
 var ___errno_location = Module["___errno_location"] = function() {
- return (___errno_location = Module["___errno_location"] = Module["asm"]["L"]).apply(null, arguments);
+ return (___errno_location = Module["___errno_location"] = Module["asm"]["M"]).apply(null, arguments);
 };
 
 var stackSave = Module["stackSave"] = function() {
- return (stackSave = Module["stackSave"] = Module["asm"]["M"]).apply(null, arguments);
+ return (stackSave = Module["stackSave"] = Module["asm"]["N"]).apply(null, arguments);
 };
 
 var stackRestore = Module["stackRestore"] = function() {
- return (stackRestore = Module["stackRestore"] = Module["asm"]["N"]).apply(null, arguments);
+ return (stackRestore = Module["stackRestore"] = Module["asm"]["O"]).apply(null, arguments);
 };
 
 var stackAlloc = Module["stackAlloc"] = function() {
- return (stackAlloc = Module["stackAlloc"] = Module["asm"]["O"]).apply(null, arguments);
+ return (stackAlloc = Module["stackAlloc"] = Module["asm"]["P"]).apply(null, arguments);
 };
 
 Module["ccall"] = ccall;

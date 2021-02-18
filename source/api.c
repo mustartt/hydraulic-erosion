@@ -46,13 +46,14 @@ erosion_setting_t erode_param;
 #ifdef _WASM
 EMSCRIPTEN_KEEPALIVE
 #endif
-void initialize(float* map, int sim_size) {
+float* initialize(float* map, int sim_size) {
   // erosion: initalize heightmap
   if (map == NULL) {
     heightmap = (float*) calloc(sim_size * sim_size, sizeof(float));
   }
 
   map_size = sim_size;
+  return heightmap;
 }
 
 
@@ -143,6 +144,14 @@ void override_heightmap(float* new_heightmap) {
     free(heightmap);
   }
   heightmap = new_heightmap;
+}
+
+
+#ifdef _WASM
+EMSCRIPTEN_KEEPALIVE
+#endif
+float sample(int x, int y) {
+  return heightmap[y * map_size + x];
 }
 
 

@@ -13,8 +13,10 @@
 }
 
 .app-container {
+  display: flex;
+  flex-direction: row;
+
   margin: 0;
   padding: 0;
   overflow: hidden;
-  display: flex;
 }

@@ -8,11 +8,11 @@ CLIB=-lpng
 
 OBJDIR=build
 
-output: test.o erosion.o noise.o heightmap_gen.o utils.o import.o api.o
-	$(CC) $(CFLAGS) $(CLIB) test.o \
+output: test.o erosion.o noise.o heightmap_gen.o utils.o api.o
+	$(CC) $(CFLAGS) test.o \
 		erosion.o noise.o heightmap_gen.o \
-		utils.o import.o api.o \
-		-o output
+		utils.o api.o \
+		-o output.exe
 
 erosion.o: erosion.c erosion.h
 	$(CC) $(CFLAGS) -c erosion.c -o erosion.o
@@ -28,8 +28,8 @@ utils.o: export.c export.h
 
 # requires libpng to be installed 
 #    linkes with libpng library
-import.o: import.c import.h
-	$(CC) $(CFLAGS) -c import.c -o import.o
+#import.o: import.c import.h
+#	$(CC) $(CFLAGS) -c import.c -o import.o
 
 api.o: api.c api.h
 	$(CC) $(CFLAGS) -c api.c -o api.o

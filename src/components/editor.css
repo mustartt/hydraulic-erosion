@@ -1,10 +1,7 @@
 .editor-pane {
     background-color: #303030;
     height: 100vh;
-    width: 25vw;
-    min-width: 275px;
-    max-width: 325px;
-
+    width: 300px;
     overflow-y: scroll;
 }
 

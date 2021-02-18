@@ -6,6 +6,7 @@ import Editor from './components/editor';
 import Viewport from './components/viewport';
 
 import MainModule from './output';
+import { read } from 'fs';
 const Module = MainModule();
 
 // Use Material UI Dark theme
@@ -44,36 +45,7 @@ const defaultViewportParam: ViewportParam = {
 };
 
 
-const App = () => {
-  /* Setup params */
-  const [noiseParam, updateNoiseParam] = useState(defaultNoiseParam);
-  const [erosionParam, updateErosionParam] = useState(defaultErosionParam);
-  const [viewportParam, updateViewportParam] = useState(defaultViewportParam);
-
-  const handleNoiseUpdate = (newNoiseParam: NoiseParam) : void => {
-    updateNoiseParam(newNoiseParam);
-    console.log(newNoiseParam);
-  };
-
-  const handleErosionUpdate = (newErosionParam: ErosionParam) : void => {
-    updateErosionParam(newErosionParam);
-    console.log(newErosionParam);
-  };
-
-  const handleViewportUpdate = (newViewportParam: ViewportParam) : void => {
-    updateViewportParam(newViewportParam);
-    console.log(newViewportParam);
-  }
-
-  const props: EditorParam = {
-    noiseParam,
-    erosionParam,
-    viewportParam,
-    handleNoiseUpdate,
-    handleErosionUpdate,
-    handleViewportUpdate
-  }
-
+const App = () => {  
   /* Load WASM Module */
   const [ready, setReady] = useState<boolean>(false);
   const [module, setModule] = useState<any>(null);
@@ -81,12 +53,12 @@ const App = () => {
 
   useEffect(() => {
     Module.then((module: any) => {
-      console.log("WASM Module is loaded.");
+      console.log("WASM Module is loading.");
       
       /* Creating the api object */
       const api_obj = {
         version: module.cwrap('version', 'number', []),
-        create_map: module.cwrap('initialize', null, ['number', 'number']),
+        create_map: module.cwrap('initialize', 'number', ['number', 'number']),
         default_erosion_param: module.cwrap('use_default_erosion_params', null, 
           ['number', 'number', 'number', 'number', 'number', 'number']),
         set_param: module.cwrap('set_parameters', null, 
@@ -98,19 +70,86 @@ const App = () => {
         save_obj: module.cwrap('save_obj', null, ['string', 'number']),
         save_png: module.cwrap('save_png', null, ['string']),
         save_stl: module.cwrap('save_stl', null, ['string']),
-        // sample: (x: number, y: number) => number
-      };
-      
-      setReady(true);
+        sample: module.cwrap('sample', null, ['number', 'number'])
+      };      
+
+      // BUG: Top half of the heightmap has a blackbar over it
+      api_obj.create_map(null, viewportParam.map_size);
+      api_obj.default_erosion_param(noiseParam.seed, noiseParam.octaves, 
+                                    noiseParam.persistence, noiseParam.scale, 
+                                    noiseParam.height, erosionParam.drop_radius);
+
+      api_obj.generate_noise();
+
       setAPI(api_obj);
       setModule(module);
+      setReady(true);
+
+      console.log("WASM Module is loaded.");
     });
   }, []);
+
+  
+  /* Setup params */
+  const [noiseParam, setNoiseParam] = useState(defaultNoiseParam);
+  const [erosionParam, setErosionParam] = useState(defaultErosionParam);
+  const [viewportParam, setViewportParam] = useState(defaultViewportParam);
+
+  const handleNoiseUpdate = (param: NoiseParam) : void => {
+    const newNoiseParam = {...param};
+    
+    api.set_param(newNoiseParam.seed, newNoiseParam.octaves, newNoiseParam.persistence, 
+                  newNoiseParam.scale, newNoiseParam.height, erosionParam.droplet_lifetime,
+                  erosionParam.inertia, erosionParam.sediment_capacity_factor, 
+                  erosionParam.min_sediment_capacity_factor,
+                  erosionParam.deposit_speed, erosionParam.erode_speed,
+                  erosionParam.evaporate_speed, erosionParam.gravity,
+                  erosionParam.drop_radius);
+    api.generate_noise();
+
+    setNoiseParam(newNoiseParam);
+  };
+
+  const handleErosionUpdate = (param: ErosionParam) : void => {
+    const newErosionParam = {...param};
+    
+    api.set_param(noiseParam.seed, noiseParam.octaves, noiseParam.persistence, 
+      noiseParam.scale, noiseParam.height, newErosionParam.droplet_lifetime,
+      newErosionParam.inertia, newErosionParam.sediment_capacity_factor, 
+      newErosionParam.min_sediment_capacity_factor,
+      newErosionParam.deposit_speed, newErosionParam.erode_speed,
+      newErosionParam.evaporate_speed, newErosionParam.gravity,
+      newErosionParam.drop_radius);
+    api.generate_noise();
+
+    setErosionParam(newErosionParam);
+  };
+
+  const handleViewportUpdate = (param: ViewportParam) : void => {
+    const newViewportParam = {...param};
+    // Do some stuff here...
+    setViewportParam(newViewportParam);
+  }
+
+  const props: EditorParam = {
+    noiseParam,
+    erosionParam,
+    viewportParam,
+    handleNoiseUpdate,
+    handleErosionUpdate,
+    handleViewportUpdate
+  }
+
+  const viewportProps = {
+    api: api,
+    viewportParam: viewportParam,
+    ready: ready
+  }
 
   return (
     <div className="app-container">
       <ThemeProvider theme={theme}>
-        <Viewport></Viewport>
+        <Viewport {...viewportProps}></Viewport>
         <Editor {...props}></Editor>
       </ThemeProvider>
     </div>
