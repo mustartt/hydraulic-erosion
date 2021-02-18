@@ -39,7 +39,7 @@ const ImageViewer: React.FC<ViewportProps> = (props) => {
     }
   });
 
-  return <canvas ref={canvasRef} width={size} height={size} />;
+  return <canvas ref={canvasRef} width={size} height={size}/>;
 }
 
 const Viewport: React.FC<ViewportProps> = (props) => {

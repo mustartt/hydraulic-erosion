@@ -46,8 +46,7 @@ void set_parameters( unsigned int seed,
                      int droplet_life, float inertia,
                      float sediment_capacity, float min_sediment_capacity,
                      float deposit_speed, float erode_speed,
-                     float evaporate_speed, float gravity,
-                     int radius );
+                     float evaporate_speed, float gravity );
 
 /**
  * @brief Only initializes the noise generator settings and compute

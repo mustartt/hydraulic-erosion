@@ -19,10 +19,10 @@ const theme = createMuiTheme({
 
 /* Default Settings */
 const defaultNoiseParam: NoiseParam = {
-  seed: 12345,
-  octaves: 5,
+  seed: 1,
+  octaves: 4,
   persistence: 0.45,
-  scale: 3,
+  scale: 1,
   height: 1
 };
 
@@ -57,38 +57,55 @@ const App = () => {
       
       /* Creating the api object */
       const api_obj = {
+        // returns the version of the WASM Module
         version: module.cwrap('version', 'number', []),
-        create_map: module.cwrap('initialize', 'number', ['number', 'number']),
+        // allocates the heightmap
+        create_map: module.cwrap('initialize', 'number', ['number']),
+        // returns the points to the heightmap
+        get_map: module.cwrap('get_heightmap', 'number', []),
+        // samples the heightmap at x y
+        sample: module.cwrap('sample', null, ['number', 'number']),
+        // use default erosion. Set noise param
         default_erosion_param: module.cwrap('use_default_erosion_params', null, 
-          ['number', 'number', 'number', 'number', 'number', 'number']),
+          ['number', 'number', 'number', 'number']),
+        // set full param <- Always use this
         set_param: module.cwrap('set_parameters', null, 
           ['number', 'number', 'number', 'number', 'number', 'number', 'number', 
-          'number', 'number', 'number', 'number', 'number', 'number', 'number']),
+          'number', 'number', 'number', 'number', 'number', 'number']),
+        // generates noise
         generate_noise: module.cwrap('generate_noise', null, []),
-        erode: module.cwrap('erode_iter', null, ['number']),
-        teardown: module.cwrap('teardown', null, []),
+        // erode n iterations with radius r
+        erode: module.cwrap('erode_iter', null, ['number', 'number']),
+        // frees the map
+        free_map: module.cwrap('free_heightmap', null, []),
+        /* Export Functions */
         save_obj: module.cwrap('save_obj', null, ['string', 'number']),
         save_png: module.cwrap('save_png', null, ['string']),
         save_stl: module.cwrap('save_stl', null, ['string']),
-        sample: module.cwrap('sample', null, ['number', 'number'])
       };      
 
       // BUG: Top half of the heightmap has a blackbar over it
-      api_obj.create_map(null, viewportParam.map_size);
-      api_obj.default_erosion_param(noiseParam.seed, noiseParam.octaves, 
-                                    noiseParam.persistence, noiseParam.scale, 
-                                    noiseParam.height, erosionParam.drop_radius);
+      api_obj.create_map(viewportParam.map_size);
+      api_obj.set_param(noiseParam.seed, noiseParam.octaves, noiseParam.persistence,
+                        noiseParam.scale, noiseParam.height,
+                        erosionParam.droplet_lifetime, erosionParam.inertia, 
+                        erosionParam.sediment_capacity_factor, 
+                        erosionParam.sediment_capacity_factor,
+                        erosionParam.deposit_speed, 
+                        erosionParam.erode_speed,
+                        erosionParam.evaporate_speed,
+                        erosionParam.gravity);
 
       api_obj.generate_noise();
-
+      
       setAPI(api_obj);
       setModule(module);
       setReady(true);
 
       console.log("WASM Module is loaded.");
+      console.log("Version:", api_obj.version());
     });
   }, []);
-
   
   /* Setup params */
   const [noiseParam, setNoiseParam] = useState(defaultNoiseParam);
@@ -98,13 +115,16 @@ const App = () => {
   const handleNoiseUpdate = (param: NoiseParam) : void => {
     const newNoiseParam = {...param};
     
-    api.set_param(newNoiseParam.seed, newNoiseParam.octaves, newNoiseParam.persistence, 
-                  newNoiseParam.scale, newNoiseParam.height, erosionParam.droplet_lifetime,
-                  erosionParam.inertia, erosionParam.sediment_capacity_factor, 
-                  erosionParam.min_sediment_capacity_factor,
-                  erosionParam.deposit_speed, erosionParam.erode_speed,
-                  erosionParam.evaporate_speed, erosionParam.gravity,
-                  erosionParam.drop_radius);
+    api.set_param(newNoiseParam.seed, newNoiseParam.octaves, 
+      newNoiseParam.persistence,
+      newNoiseParam.scale, newNoiseParam.height,
+      erosionParam.droplet_lifetime, erosionParam.inertia, 
+      erosionParam.sediment_capacity_factor, 
+      erosionParam.sediment_capacity_factor,
+      erosionParam.deposit_speed, 
+      erosionParam.erode_speed,
+      erosionParam.evaporate_speed,
+      erosionParam.gravity);
     api.generate_noise();
 
     setNoiseParam(newNoiseParam);
@@ -113,21 +133,15 @@ const App = () => {
   const handleErosionUpdate = (param: ErosionParam) : void => {
     const newErosionParam = {...param};
     
-    api.set_param(noiseParam.seed, noiseParam.octaves, noiseParam.persistence, 
-      noiseParam.scale, noiseParam.height, newErosionParam.droplet_lifetime,
-      newErosionParam.inertia, newErosionParam.sediment_capacity_factor, 
-      newErosionParam.min_sediment_capacity_factor,
-      newErosionParam.deposit_speed, newErosionParam.erode_speed,
-      newErosionParam.evaporate_speed, newErosionParam.gravity,
-      newErosionParam.drop_radius);
-    api.generate_noise();
-
     setErosionParam(newErosionParam);
   };
 
   const handleViewportUpdate = (param: ViewportParam) : void => {
     const newViewportParam = {...param};
-    // Do some stuff here...
+    api.free_map();
+    api.create_map(param.map_size);
+    api.generate_noise();
+
     setViewportParam(newViewportParam);
   }
 

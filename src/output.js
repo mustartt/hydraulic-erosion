@@ -601,7 +601,6 @@ function hasPrefix(str, prefix) {
 }
 
 
-
 var wasmBinaryFile = "/output.wasm";
 
 const getBinaryPromise = () => new Promise((resolve, reject) => {
@@ -3946,36 +3945,36 @@ var _calloc = Module["_calloc"] = function() {
  return (_calloc = Module["_calloc"] = Module["asm"]["v"]).apply(null, arguments);
 };
 
-var _use_default_erosion_params = Module["_use_default_erosion_params"] = function() {
- return (_use_default_erosion_params = Module["_use_default_erosion_params"] = Module["asm"]["w"]).apply(null, arguments);
-};
-
-var _set_parameters = Module["_set_parameters"] = function() {
- return (_set_parameters = Module["_set_parameters"] = Module["asm"]["x"]).apply(null, arguments);
-};
-
-var _generate_noise = Module["_generate_noise"] = function() {
- return (_generate_noise = Module["_generate_noise"] = Module["asm"]["y"]).apply(null, arguments);
-};
-
-var _override_heightmap = Module["_override_heightmap"] = function() {
- return (_override_heightmap = Module["_override_heightmap"] = Module["asm"]["z"]).apply(null, arguments);
-};
-
-var _free = Module["_free"] = function() {
- return (_free = Module["_free"] = Module["asm"]["A"]).apply(null, arguments);
+var _get_heightmap = Module["_get_heightmap"] = function() {
+ return (_get_heightmap = Module["_get_heightmap"] = Module["asm"]["w"]).apply(null, arguments);
 };
 
 var _sample = Module["_sample"] = function() {
- return (_sample = Module["_sample"] = Module["asm"]["B"]).apply(null, arguments);
+ return (_sample = Module["_sample"] = Module["asm"]["x"]).apply(null, arguments);
+};
+
+var _use_default_erosion_params = Module["_use_default_erosion_params"] = function() {
+ return (_use_default_erosion_params = Module["_use_default_erosion_params"] = Module["asm"]["y"]).apply(null, arguments);
+};
+
+var _set_parameters = Module["_set_parameters"] = function() {
+ return (_set_parameters = Module["_set_parameters"] = Module["asm"]["z"]).apply(null, arguments);
+};
+
+var _generate_noise = Module["_generate_noise"] = function() {
+ return (_generate_noise = Module["_generate_noise"] = Module["asm"]["A"]).apply(null, arguments);
+};
+
+var _free_heightmap = Module["_free_heightmap"] = function() {
+ return (_free_heightmap = Module["_free_heightmap"] = Module["asm"]["B"]).apply(null, arguments);
+};
+
+var _free = Module["_free"] = function() {
+ return (_free = Module["_free"] = Module["asm"]["C"]).apply(null, arguments);
 };
 
 var _erode_iter = Module["_erode_iter"] = function() {
- return (_erode_iter = Module["_erode_iter"] = Module["asm"]["C"]).apply(null, arguments);
-};
-
-var _teardown = Module["_teardown"] = function() {
- return (_teardown = Module["_teardown"] = Module["asm"]["D"]).apply(null, arguments);
+ return (_erode_iter = Module["_erode_iter"] = Module["asm"]["D"]).apply(null, arguments);
 };
 
 var _save_obj = Module["_save_obj"] = function() {
