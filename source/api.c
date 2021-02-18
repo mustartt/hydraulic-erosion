@@ -213,3 +213,11 @@ EMSCRIPTEN_KEEPALIVE
 void save_stl(char* filename) {
   export_stl(heightmap, map_size, filename);
 }
+
+
+#ifdef _WASM
+EMSCRIPTEN_KEEPALIVE
+#endif
+int version() {
+  return 1234;
+}

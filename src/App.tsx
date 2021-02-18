@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import './App.css';
-
 import { createMuiTheme, ThemeProvider } from '@material-ui/core';
-
+import { NoiseParam, ErosionParam, ViewportParam, EditorParam } from './setting-types';
 import Editor from './components/editor';
 import Viewport from './components/viewport';
 
-import { NoiseParam, ErosionParam, ViewportParam, EditorParam } from './setting-types';
+import MainModule from './output';
+const Module = MainModule();
 
 // Use Material UI Dark theme
 const theme = createMuiTheme({
@@ -45,23 +45,23 @@ const defaultViewportParam: ViewportParam = {
 
 
 const App = () => {
-
+  /* Setup params */
   const [noiseParam, updateNoiseParam] = useState(defaultNoiseParam);
   const [erosionParam, updateErosionParam] = useState(defaultErosionParam);
   const [viewportParam, updateViewportParam] = useState(defaultViewportParam);
 
   const handleNoiseUpdate = (newNoiseParam: NoiseParam) : void => {
-    // call updateNoiseParam 
+    updateNoiseParam(newNoiseParam);
     console.log(newNoiseParam);
   };
 
   const handleErosionUpdate = (newErosionParam: ErosionParam) : void => {
-    // call updateErosionParam
+    updateErosionParam(newErosionParam);
     console.log(newErosionParam);
   };
 
   const handleViewportUpdate = (newViewportParam: ViewportParam) : void => {
-    // call updateViewportParam
+    updateViewportParam(newViewportParam);
     console.log(newViewportParam);
   }
 
@@ -73,6 +73,39 @@ const App = () => {
     handleErosionUpdate,
     handleViewportUpdate
   }
+
+  /* Load WASM Module */
+  const [ready, setReady] = useState<boolean>(false);
+  const [module, setModule] = useState<any>(null);
+  const [api, setAPI] = useState<any>(null);
+
+  useEffect(() => {
+    Module.then((module: any) => {
+      console.log("WASM Module is loaded.");
+      
+      /* Creating the api object */
+      const api_obj = {
+        version: module.cwrap('version', 'number', []),
+        create_map: module.cwrap('initialize', null, ['number', 'number']),
+        default_erosion_param: module.cwrap('use_default_erosion_params', null, 
+          ['number', 'number', 'number', 'number', 'number', 'number']),
+        set_param: module.cwrap('set_parameters', null, 
+          ['number', 'number', 'number', 'number', 'number', 'number', 'number', 
+          'number', 'number', 'number', 'number', 'number', 'number', 'number']),
+        generate_noise: module.cwrap('generate_noise', null, []),
+        erode: module.cwrap('erode_iter', null, ['number']),
+        teardown: module.cwrap('teardown', null, []),
+        save_obj: module.cwrap('save_obj', null, ['string', 'number']),
+        save_png: module.cwrap('save_png', null, ['string']),
+        save_stl: module.cwrap('save_stl', null, ['string']),
+        // sample: (x: number, y: number) => number
+      };
+      
+      setReady(true);
+      setAPI(api_obj);
+      setModule(module);
+    });
+  }, []);
 
   return (
     <div className="app-container">
