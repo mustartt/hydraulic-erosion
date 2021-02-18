@@ -39,7 +39,6 @@ typedef struct {
   float ERODE_SPEED;
   float EVAPORATE_SPEED;
   float GRAVITY;
-  int   drop_radius;
 } erosion_setting_t;
 
 

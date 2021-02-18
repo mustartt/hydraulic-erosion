@@ -5,7 +5,7 @@
 *       The main API file for interacting with the erosion simulator.
 *
 * PUBLIC FUNCTIONS :
-*       void initialize( float* map, int sim_size )
+*       void initialize( int sim_size )
 *       void set_parameters(
 *                    unsigned int seed, 
 *                    int octaves, float persistence, 
@@ -13,13 +13,10 @@
 *                    int droplet_life, float inertia,
 *                    float sediment_capacity, float min_sediment_capacity,
 *                    float deposit_speed, float erode_speed,
-*                    float evaporate_speed, float gravity,
-*                    int radius )
+*                    float evaporate_speed, float gravity )
 *       void use_default_erosion_params( unsigned int seed, 
                                          int octaves, float persistence, 
-                                         float scale, float map_height,
-                                         int radius )
-*       void override_heightmap( float* new_heightmap )
+                                         float scale, float map_height )
 *       void erode_iter( int iterations )
 *       void save_obj( char* filename, int size ) 
 *       void save_png( char* filename )
@@ -31,10 +28,14 @@
 /**
  * @brief Initializes the internal states for the simulator
  * 
- * @param map       passing a pre-existing heightmap. calloc if map is NULL
  * @param sim_size  the size of the heightmap
  */
-float* initialize( float* map, int sim_size );
+void initialize( int sim_size );
+
+/**
+ * @brief Returns the current heightmap
+ */
+float* get_heightmap( void );
 
 /**
  * @brief Initalizes the simulation parameters
@@ -54,8 +55,7 @@ void set_parameters( unsigned int seed,
  */
 void use_default_erosion_params(unsigned int seed, 
                                 int octaves, float persistence, 
-                                float scale, float map_height,
-                                int radius);
+                                float scale, float map_height );
 
 /**
  * @brief Generates noise onto the heightmap 
@@ -68,14 +68,9 @@ void generate_noise( void );
 float sample(int x, int y);
 
 /**
- * @brief overrides the original heightmap and frees the old heightmap if alloced
- */
-void override_heightmap( float* new_heightmap );
-
-/**
  * @brief Performs n @param iterations on the heightmap 
  */
-void erode_iter( int iterations );
+void erode_iter( int iterations, int radius );
 
 /**
  * @brief Export the obj file 
@@ -92,7 +87,8 @@ void save_png( char* filename );
  */
 void save_stl( char* filename );
 
+
 /**
- * @brief frees allocated memory
+ * @brief Frees the allocated heightmap
  */
-void teardown( void );
+void free_heightmap( void );

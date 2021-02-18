@@ -122,55 +122,51 @@ int    weights_radius;
 int    weights_size;
 
 void compute_weights_matrix(int radius) {
-  if (weights) {
+  assert(radius >= 1);
+  weights_radius = radius;
+  int size = radius * 2 + 1;
+  weights_size = size;
+
+  weights = (float*) calloc(size * size, sizeof(float));
+
+  if (weights == NULL)
     return;
+
+  int x_offset = radius;
+  int y_offset = radius;
+  float weight_sum = 0;
+
+  for (int y = -radius; y <= radius; y++) {
+    for (int x = -radius; x <= radius; x++) {
+      int coord_x = x_offset + x;
+      int coord_y = y_offset + y;
+      float dist_sqr = x*x + y*y;
+      
+      if (dist_sqr < radius * radius) {
+        // compute the weight
+        float weight = 1 - sqrtf(dist_sqr) / radius;
+        weights[coord_y * size + coord_x] = weight;
+        weight_sum += weight;
+      }
+    } 
   }
-  else {
-    weights_radius = radius;
-    int size = radius * 2 + 1;
-    weights_size = size;
 
-    weights = (float*) calloc(size * size, sizeof(float));
+  // normalize weights matrix
+  for (int y = -radius; y <= radius; y++) {
+    for (int x = -radius; x <= radius; x++) {
+      int coord_x = x_offset + x;
+      int coord_y = y_offset + y;
+      // normalize
+      weights[coord_y * size + coord_x] /= weight_sum;
 
-    if (weights == NULL)
-      return;
-
-    int x_offset = radius;
-    int y_offset = radius;
-    float weight_sum = 0;
-
-    for (int y = -radius; y <= radius; y++) {
-      for (int x = -radius; x <= radius; x++) {
-        int coord_x = x_offset + x;
-        int coord_y = y_offset + y;
-        float dist_sqr = x*x + y*y;
-        
-        if (dist_sqr < radius * radius) {
-          // compute the weight
-          float weight = 1 - sqrtf(dist_sqr) / radius;
-          weights[coord_y * size + coord_x] = weight;
-          weight_sum += weight;
-        }
-      } 
-    }
-
-    // normalize weights matrix
-    for (int y = -radius; y <= radius; y++) {
-      for (int x = -radius; x <= radius; x++) {
-        int coord_x = x_offset + x;
-        int coord_y = y_offset + y;
-        // normalize
-        weights[coord_y * size + coord_x] /= weight_sum;
-      } 
-    }
+    } 
   }
 }
 
-/* frees the weights matrix */
+/* frees the weights matrix   */
+/* should only be called once */
 void free_weights_matrix() {
-  if (weights)
-    free(weights);
-  weights = NULL;
+  free(weights);
 }
 
 
@@ -243,7 +239,7 @@ void erode( float* height_map, int map_size, struct droplet* drop ) {
       // dig a hole in the terrain behind the droplet
       float amount_to_erode = fminf((sediment_capacity - drop->sediment) * ERODE_SPEED,
                                     -delta_height);
-    
+
       // Use erosion brush to erode from all nodes inside the droplet's erosion radius
       int offset = weights_radius;
       for (int y = -weights_radius; y <= weights_radius; y++) {
@@ -257,7 +253,7 @@ void erode( float* height_map, int map_size, struct droplet* drop ) {
           // check if coord is in heightmap
           if ((map_coord_x >= 0 && map_coord_x < map_size) && 
               (map_coord_y >= 0 && map_coord_y < map_size)) {
-            
+
             float weight = weights[weight_coord_y * weights_size + weight_coord_x];
             float weighted_erode_amount = weight * amount_to_erode;
             int erode_index = map_coord_y * map_size + map_coord_x;

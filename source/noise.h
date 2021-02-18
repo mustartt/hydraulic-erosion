@@ -7,7 +7,8 @@
 * PUBLIC FUNCTIONS :
 *       double    noise( double xin, double yin ) 
 *       void      init_perm( void )
-*
+*       int       random( void )
+*       void      set_seed( unsigned int seed )
 * PRIVATE FUNCTIONS :
 *       int       fastfloor( double x )
 *       double    dot_2( int g[], double x, double y )
@@ -39,5 +40,18 @@ void init_perm( void );
  * @param yin input y coordinate
  */
 double noise( double xin, double yin );
+
+
+/**
+ * @brief Pseudo random function based on the undefined behavior of long overflow
+ */
+int defined_random( void );
+
+/**
+ * @brief Sets the random seed based on @param seed
+ */
+void set_random_seed( unsigned int seed );
+
+
 
 #endif

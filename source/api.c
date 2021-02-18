@@ -5,7 +5,7 @@
 *       The main API file for interacting with the erosion simulator.
 *
 * PUBLIC FUNCTIONS :
-*       void initialize( float* map, int sim_size )
+*       void initialize( int sim_size )
 *       void set_parameters(
 *                    unsigned int seed, 
 *                    int octaves, float persistence, 
@@ -46,15 +46,30 @@ erosion_setting_t erode_param;
 #ifdef _WASM
 EMSCRIPTEN_KEEPALIVE
 #endif
-float* initialize(float* map, int sim_size) {
-  // erosion: initalize heightmap
-  if (map == NULL) {
-    heightmap = (float*) calloc(sim_size * sim_size, sizeof(float));
-  }
-
+void initialize(int sim_size) {
+  heightmap = (float*) calloc(sim_size * sim_size, sizeof(float));
   map_size = sim_size;
+}
+
+#ifdef _WASM
+EMSCRIPTEN_KEEPALIVE
+#endif
+float* get_heightmap() {
   return heightmap;
 }
+
+#ifdef _WASM
+EMSCRIPTEN_KEEPALIVE
+#endif
+float sample(int x, int y) {
+  if ((0 <= x && x < map_size) && (0 <= y && y < map_size)) {
+    return heightmap[y * map_size + x];
+  }
+  else {
+    return -1; /* Heap Safety Check */
+  }
+}
+
 
 
 #ifdef _WASM
@@ -62,11 +77,7 @@ EMSCRIPTEN_KEEPALIVE
 #endif
 void use_default_erosion_params(unsigned int seed, 
                                 int octaves, float persistence, 
-                                float scale, float map_height,
-                                int radius) {
-  free_weights_matrix(); /* assumes that radius param is different */
-                         /* and rebuilds the weights matrix for each set_param */
-
+                                float scale, float map_height) {
   // configure heightmap generator noise settings
   struct setting generator_param = {
     .seed         = seed,
@@ -76,9 +87,6 @@ void use_default_erosion_params(unsigned int seed,
     .height       = map_height
   };
   noise_param = generator_param;
-
-  // recomputes the weights matrix for erosion
-  compute_weights_matrix(radius);
 }
 
 
@@ -93,12 +101,7 @@ void set_parameters(/* heightmap gen params */
                     int droplet_life, float inertia,
                     float sediment_capacity, float min_sediment_capacity,
                     float deposit_speed, float erode_speed,
-                    float evaporate_speed, float gravity,
-                    int radius) {
-
-  free_weights_matrix(); /* assumes that radius param is different */
-                         /* and rebuilds the weights matrix for each set_param */
-
+                    float evaporate_speed, float gravity ) {
   // configure heightmap generator noise settings
   struct setting generator_param = {
     .seed         = seed,
@@ -118,13 +121,9 @@ void set_parameters(/* heightmap gen params */
     .DEPOSIT_SPEED = deposit_speed,
     .EVAPORATE_SPEED = evaporate_speed,
     .GRAVITY = gravity,
-    .drop_radius = radius
   };
   erode_param = erosion_param;
   write_settings(erode_param);
-
-  // recomputes the weights matrix for erosion
-  compute_weights_matrix(radius);
 }
 
 
@@ -139,39 +138,20 @@ void generate_noise() {
 #ifdef _WASM
 EMSCRIPTEN_KEEPALIVE
 #endif
-void override_heightmap(float* new_heightmap) {
-  if (heightmap) {
-    free(heightmap);
-  }
-  heightmap = new_heightmap;
+void free_heightmap() {
+  free(heightmap);
+  map_size = 0;
 }
 
 
 #ifdef _WASM
 EMSCRIPTEN_KEEPALIVE
 #endif
-float sample(int x, int y) {
-  return heightmap[y * map_size + x];
-}
-
-
-#ifdef _WASM
-EMSCRIPTEN_KEEPALIVE
-#endif
-void erode_iter(int iterations) {
-  srand(noise_param.seed); // sets seed
-  
-  printf("Starting Erosion: %d Iterations.\n", iterations);
-
-  int delta = iterations / 100;
+void erode_iter(int iterations, int radius) {
+  // computes the weights matrix only before erosion
+  compute_weights_matrix(radius);
 
   for (int i = 0; i < iterations; i++) {
-    
-    if (i % delta == 0) {
-      int percent = (i * 100) / iterations;
-      printf("Progress: %d/100.\n", percent);
-    }
-
     // randomize droplet's position
     struct droplet drop = {
       .pos_x = (rand() % (map_size - 2)) + 1,
@@ -186,16 +166,9 @@ void erode_iter(int iterations) {
     // calculates the effect of drop on heightmap
     erode(heightmap, map_size, &drop);
   }
-}
 
-
-#ifdef _WASM
-EMSCRIPTEN_KEEPALIVE
-#endif
-void teardown() {
+  // frees the weights matrix after erosion
   free_weights_matrix();
-  free(heightmap);
-  heightmap = NULL;
 }
 
 
@@ -228,5 +201,5 @@ void save_stl(char* filename) {
 EMSCRIPTEN_KEEPALIVE
 #endif
 int version() {
-  return 1234;
+  return 1004;
 }

@@ -25,20 +25,19 @@
 #include <string.h>
 
 // add noise to heightmap based on scale and weight
+// the noise freq is inversly prop to scale
 void write_single(float* height_map, int map_size, float scale, float weight) {
-  // introduce randomness in offsets
-  int x_offset = rand() % map_size;
-  int y_offset = rand() % map_size;
-
-  for (int x = 0; x < map_size; x++) {
-    for (int y = 0; y < map_size; y++) {
-      double sample_x = (double) (x + x_offset) / (double) scale;
-      double sample_y = (double) (y + y_offset) / (double) scale;
+  // introduce offsets
+  double x_offset = (double) (defined_random() % map_size) / map_size;
+  double y_offset = (double) (defined_random() % map_size) / map_size;
+  
+  for (int y = 0; y < map_size; y++) {
+    for (int x = 0; x < map_size; x++) {
+      double sample_x = ((double) x / map_size) / scale + x_offset;
+      double sample_y = ((double) y / map_size) / scale + y_offset;
       
-      double val = noise(sample_x, sample_y);         /* val in [-1, 1] */
-      float noise_normalized = weight * (val + 1) / 2;
-      
-      height_map[x * map_size + y] += noise_normalized;
+      double sample = (noise(sample_x, sample_y) + 1) / 2; // between [0, 1] 
+      height_map[y * map_size + x] += sample * weight;
     }
   }
 }
@@ -47,16 +46,16 @@ void gen_heightmap(float* height_map, int map_size, setting_t setting) {
   // set seed and init permutation array
   init_perm();
   memset(height_map, 0, map_size * map_size * sizeof(float));
-  
-  srand(setting->seed);
-  float weight = 1.0f;
-  float scale = setting->scale * map_size;
+  set_random_seed(setting->seed);
+
+  float weight = 1.0f; // inital weight value
+  float scale = setting->scale;
   
   for (int oct = 0; oct < setting->octaves; oct++) {
     // layer noise with decreasing scale and weight
     write_single(height_map, map_size, scale, weight);
     weight *= setting->persistence; /* each noise layer contributes less */
-    scale /= 2;
+    scale /= 2; 
   }
 
   // normalize heightmap

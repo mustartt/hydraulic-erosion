@@ -1,23 +1,3 @@
-/***********************************************************************
-* FILENAME :        noise.h   noise.c
-*
-* DESCRIPTION :
-*       Implements a version of OpenSimplex Noise
-*
-* PUBLIC FUNCTIONS :
-*       double    noise( double xin, double yin ) 
-*       void      init_perm( void )
-*
-* PRIVATE FUNCTIONS :
-*       int       fastfloor( double x )
-*       double    dot_2( int g[], double x, double y )
-*
-* NOTES :
-*       Implements basic simplex noise algorithm from 
-*       http://webstaff.itn.liu.se/~stegu/simplexnoise/simplexnoise.pdf
-*
-* AUTHOR :    Henry Jiang         DATE :    Feb 11, 2021
-*/
 
 #include "noise.h"
 #include <math.h>
@@ -46,36 +26,43 @@ int p[] = {151, 160, 137, 91, 90, 15, 131, 13, 201, 95, 96, 53, 194,
            127, 4, 150, 254, 138, 236, 205, 93, 222, 114, 67, 29, 24, 72, 243,
            141, 128, 195, 78, 66, 215, 61, 156, 180};
 
-
 int perm[512];
 
 // initialize the perm
-void init_perm()
-{
-  for (int i = 0; i < 512; i++)
-  {
+void init_perm() {
+  for (int i = 0; i < 512; i++) {
     perm[i] = p[i & 255];
   }
 }
 
 
 // fast floor function
-int fastfloor(double x)
-{
+int fastfloor(double x) {
   return x > 0 ? (int)x : (int)x - 1;
 }
 
 
 // calculate the dot product
-double dot_2(int g[], double x, double y)
-{
+double dot_2(int g[], double x, double y) {
   return g[0] * x + g[1] * y;
 }
 
 
+/* Consistent pseudo random function */
+unsigned long int next = 1;
+
+int defined_random(void) {
+  next = next * 1103515243 + 12345;
+  return (unsigned int)(next / 65536) % 32768;
+}
+
+void set_random_seed(unsigned int seed) {
+  next = seed;
+}
+
+
 // 2D simplex noise
-double noise(double xin, double yin)
-{
+double noise(double xin, double yin) {
   double n0, n1, n2; // Noise contributions from the three corners
 
   // Skew the input space to determine which simplex cell we're in
@@ -93,13 +80,11 @@ double noise(double xin, double yin)
   // For the 2D case, the simplex shape is an equilateral triangle.
   // Determine which simplex we are in.
   int i1, j1; // Offsets for second (middle) corner of simplex in (i,j) coords
-  if (x0 > y0)
-  {
+  if (x0 > y0) {
     i1 = 1;
     j1 = 0;
   } // lower triangle, XY order: (0,0)->(1,0)->(1,1)
-  else
-  {
+  else {
     i1 = 0;
     j1 = 1;
   } // upper triangle, YX order: (0,0)->(0,1)->(1,1)
@@ -121,34 +106,25 @@ double noise(double xin, double yin)
 
   // Calculate the contribution from the three corners
   double t0 = 0.5 - x0 * x0 - y0 * y0;
-  if (t0 < 0)
-  {
+  if (t0 < 0) {
     n0 = 0.0;
-  }
-  else
-  {
+  } else {
     t0 *= t0;
     n0 = t0 * t0 * dot_2(grad3[gi0], x0, y0); // (x,y) of grad3 used for 2D gradient
   }
 
   double t1 = 0.5 - x1 * x1 - y1 * y1;
-  if (t1 < 0)
-  {
+  if (t1 < 0) {
     n1 = 0.0;
-  }
-  else
-  {
+  } else {
     t1 *= t1;
     n1 = t1 * t1 * dot_2(grad3[gi1], x1, y1);
   }
 
   double t2 = 0.5 - x2 * x2 - y2 * y2;
-  if (t2 < 0)
-  {
+  if (t2 < 0) {
     n2 = 0.0;
-  }
-  else
-  {
+  } else {
     t2 *= t2;
     n2 = t2 * t2 * dot_2(grad3[gi2], x2, y2);
   }

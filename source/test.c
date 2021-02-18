@@ -5,18 +5,14 @@
 
 int main(int argc, char** argv) {
 
-  initialize(NULL, 512);
-  use_default_erosion_params(12345, 5, 0.45, 3, 1, 2);
+  initialize(512);
+  use_default_erosion_params(1, 6, 0.5, 1, 1);
   generate_noise();
+  save_png("output.png");
 
-  save_png("output_0.png");
+  erode_iter(512 * 512 * 5, 3);
 
-  erode_iter(512 * 512 * 5);
-
-  save_png("output_1.png");
-  save_obj("output_1.obj", 512);
-
-  teardown();
+  save_png("output1.png");
 
   return 0;
 }
