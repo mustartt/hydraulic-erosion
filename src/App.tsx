@@ -47,7 +47,7 @@ const defaultViewportParam: ViewportParam = {
 
 
 
-const App = () => {  
+const App:React.FC = () => {  
   /* Load WASM Module */
   const [ready, setReady] = useState<boolean>(false);
   const [module, setModule] = useState<any>(null);
@@ -115,6 +115,7 @@ const App = () => {
         erosionParam.evaporate_speed,
         erosionParam.gravity);
       api_obj.generate_noise();
+      api_obj.save_png('output.png');
 
       setAPI(api_obj);
       setModule(module);
@@ -144,6 +145,7 @@ const App = () => {
       erosionParam.evaporate_speed,
       erosionParam.gravity);
     api.generate_noise();
+    api.save_png('output.png');
 
     setNoiseParam(newNoiseParam);
   };
@@ -152,7 +154,6 @@ const App = () => {
     const newErosionParam = {...param};
     // discard any erosion change
     // regenerate based on noise param
-
     setErosionParam(newErosionParam);
   };
 
@@ -165,13 +166,31 @@ const App = () => {
     setViewportParam(newViewportParam);
   }
 
+  const [toggle, setToggle] = useState(true);
+
+  const beginErosion = () => {
+    let size = viewportParam.map_size;
+    let iter = size * size * 3;
+    console.time('erode');
+    api.erode(iter, erosionParam.drop_radius);
+    console.timeEnd('erode');
+    setToggle(!toggle);
+    api.save_png('output.png');
+  }
+
+  const beginDownload = () => {
+    api.download('output.png');
+  }
+
   const props: EditorParam = {
     noiseParam,
     erosionParam,
     viewportParam,
     handleNoiseUpdate,
     handleErosionUpdate,
-    handleViewportUpdate
+    handleViewportUpdate,
+    beginErosion,
+    beginDownload
   }
 
   const viewportProps = {
@@ -180,31 +199,13 @@ const App = () => {
     ready: ready
   }
 
-  const [running, setRunning] = useState<boolean>();
-  const count_iterations = useRef<number>(0);
-
   return (
     <div className="app-container">
       <ThemeProvider theme={theme}>
-        {/*<button onClick={() => {
-
-          console.log(erosionParam);
-          console.log(noiseParam);
-          
-          api.set_param(1, 4, 0.45, 1, 1, 30, 0.05, 4, 0.01, 0.1, 0.1, 0.01, 4);
-          api.generate_noise();
-
-          console.log("Starting Erosion.");
-          console.time('erode');
-          api.erode(512 * 512 * 3, 3);
-          console.timeEnd('erode');
-
-          api.save_png('output.png');
-          api.download('output.png');
-
-        }}>Run</button>*/}
         <Viewport {...viewportProps}></Viewport>
-        <Editor {...props}></Editor>
+        <Editor {...props} 
+          beginErosion={beginErosion}
+          beginDownload={beginDownload}></Editor>
       </ThemeProvider>
     </div>
   );

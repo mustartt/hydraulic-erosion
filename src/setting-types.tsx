@@ -35,6 +35,8 @@ export interface EditorParam {
   viewportParam: ViewportParam,
   handleNoiseUpdate: HandleNoiseUpdate,
   handleErosionUpdate: HandleErosionUpdate,
-  handleViewportUpdate: HandleViewportUpdate
+  handleViewportUpdate: HandleViewportUpdate,
+  beginErosion: () => void,
+  beginDownload: () => void,
 }
 

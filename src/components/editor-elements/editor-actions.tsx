@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { makeStyles } from '@material-ui/core/styles';
 import { Button, Icon } from '@material-ui/core'
 
@@ -10,26 +10,28 @@ const useStyles = makeStyles((theme) => ({
     },
   }));
 
-const Actions = () => {
+interface ActionsProps {
+  beginErosion: () => void;
+  beginDownload: () => void;
+};
+
+const Actions:React.FC<ActionsProps> = (props) => {
     const classes = useStyles();
 
-    const [play, setPlay] = useState(true);
+    //const [play, setPlay] = useState(true);
+    const { beginErosion, beginDownload } = props;
 
     return (
         <div className={classes.root}>
             <Button variant="contained" onClick={() => {
-              setPlay(val => !val);
+              beginErosion();
             }}>
-              { play ? 
-                <>
-                  <Icon>play_arrow</Icon>
-                    Start
-                </> : <> 
-                  <Icon>stop</Icon>
-                    Stop
-                </>}
+              <Icon>play_arrow</Icon>
+                Start
             </Button>
-            <Button variant="contained">
+            <Button variant="contained" onClick={() => {
+              beginDownload();
+            }}>
               <Icon>get_app</Icon>
               Export
             </Button>
