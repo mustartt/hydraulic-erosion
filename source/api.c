@@ -40,7 +40,7 @@
 int     map_size;
 float*  heightmap = NULL;
 struct setting noise_param;
-erosion_setting_t erode_param;
+struct erosion_param erode_param;
 
 
 #ifdef _WASM
@@ -79,14 +79,21 @@ void use_default_erosion_params(unsigned int seed,
                                 int octaves, float persistence, 
                                 float scale, float map_height) {
   // configure heightmap generator noise settings
-  struct setting generator_param = {
-    .seed         = seed,
-    .octaves      = octaves,
-    .persistence  = persistence,
-    .scale        = scale,
-    .height       = map_height
-  };
-  noise_param = generator_param;
+  noise_param.seed = seed;
+  noise_param.octaves = octaves;
+  noise_param.persistence = persistence;
+  noise_param.scale = scale;
+  noise_param.height = map_height;
+  
+  // configure default erosion parameters
+  erode_param.DROPLET_LIFETIME          = 30;
+  erode_param.INERTA                    = .05f;
+  erode_param.SEDIMENT_CAPACITY_FACTOR  = 4;
+  erode_param.MIN_SEDIMENT_CAPACITY     = .01f;
+  erode_param.DEPOSIT_SPEED             = .3f;
+  erode_param.ERODE_SPEED               = .3f;
+  erode_param.EVAPORATE_SPEED           = .01f;
+  erode_param.GRAVITY                   = 4;
 }
 
 
@@ -103,27 +110,21 @@ void set_parameters(/* heightmap gen params */
                     float deposit_speed, float erode_speed,
                     float evaporate_speed, float gravity ) {
   // configure heightmap generator noise settings
-  struct setting generator_param = {
-    .seed         = seed,
-    .octaves      = octaves,
-    .persistence  = persistence,
-    .scale        = scale,
-    .height       = map_height
-  };
-  noise_param = generator_param;
+  noise_param.seed = seed;
+  noise_param.octaves = octaves;
+  noise_param.persistence = persistence;
+  noise_param.scale = scale;
+  noise_param.height = map_height;
 
-  // configure erosion
-  erosion_setting_t erosion_param = {
-    .DROPLET_LIFETIME = droplet_life,
-    .INERTA = inertia,
-    .SEDIMENT_CAPACITY_FACTOR = sediment_capacity,
-    .MIN_SEDIMENT_CAPACITY = min_sediment_capacity,
-    .DEPOSIT_SPEED = deposit_speed,
-    .EVAPORATE_SPEED = evaporate_speed,
-    .GRAVITY = gravity,
-  };
-  erode_param = erosion_param;
-  write_settings(erode_param);
+  // configure erosion parameters
+  erode_param.DROPLET_LIFETIME = droplet_life;
+  erode_param.INERTA = inertia;
+  erode_param.SEDIMENT_CAPACITY_FACTOR = sediment_capacity;
+  erode_param.MIN_SEDIMENT_CAPACITY = min_sediment_capacity;
+  erode_param.DEPOSIT_SPEED = deposit_speed;
+  erode_param.ERODE_SPEED = erode_speed;
+  erode_param.EVAPORATE_SPEED = evaporate_speed;
+  erode_param.GRAVITY = gravity;
 }
 
 
@@ -164,7 +165,7 @@ void erode_iter(int iterations, int radius) {
     };
 
     // calculates the effect of drop on heightmap
-    erode(heightmap, map_size, &drop);
+    erode(heightmap, map_size, &drop, &erode_param);
   }
 
   // frees the weights matrix after erosion

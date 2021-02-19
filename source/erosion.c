@@ -95,7 +95,7 @@ void interpolate( float* height_map, int map_size, float pos_x, float pos_y,
 }
 
 
-/* default settings */
+/* === default settings ===
 int   DROPLET_LIFETIME          = 30;
 float INERTA                    = .05f;
 float SEDIMENT_CAPACITY_FACTOR  = 4;
@@ -104,17 +104,8 @@ float DEPOSIT_SPEED             = .3f;
 float ERODE_SPEED               = .3f;
 float EVAPORATE_SPEED           = .01f;
 float GRAVITY                   = 4;
+*/
 
-void write_settings(erosion_setting_t setting) {
-  DROPLET_LIFETIME          = setting.DROPLET_LIFETIME;
-  INERTA                    = setting.INERTA;
-  SEDIMENT_CAPACITY_FACTOR  = setting.SEDIMENT_CAPACITY_FACTOR;
-  MIN_SEDIMENT_CAPACITY     = setting.MIN_SEDIMENT_CAPACITY;
-  DEPOSIT_SPEED             = setting.DEPOSIT_SPEED;
-  ERODE_SPEED               = setting.ERODE_SPEED;
-  EVAPORATE_SPEED           = setting.EVAPORATE_SPEED;
-  GRAVITY                   = setting.GRAVITY;
-}
 
 /* interal states for the weights matrix */
 float* weights;
@@ -170,11 +161,12 @@ void free_weights_matrix() {
 }
 
 
-void erode( float* height_map, int map_size, struct droplet* drop ) {
+
+void erode( float* height_map, int map_size, struct droplet* drop, struct erosion_param* param ) {
   assert(height_map);
   assert(drop);
 
-  for (int life = 0; life < DROPLET_LIFETIME; life++) {
+  for (int life = 0; life < param->DROPLET_LIFETIME; life++) {
     int node_x = (int) drop->pos_x;
     int node_y = (int) drop->pos_y;
     int drop_index = node_y * map_size + node_x;
@@ -185,8 +177,8 @@ void erode( float* height_map, int map_size, struct droplet* drop ) {
     struct interp_result gradient = { 0 };
     interpolate(height_map, map_size, drop->pos_x, drop->pos_y, &gradient);
 
-    drop->dir_x = (drop->dir_x * INERTA - gradient.gradient_x * (1 - INERTA));
-    drop->dir_y = (drop->dir_y * INERTA - gradient.gradient_y * (1 - INERTA));
+    drop->dir_x = (drop->dir_x * param->INERTA - gradient.gradient_x * (1 - param->INERTA));
+    drop->dir_y = (drop->dir_y * param->INERTA - gradient.gradient_y * (1 - param->INERTA));
     
     // Normalize direction
     float len = sqrtf(drop->dir_x * drop->dir_x + drop->dir_y * drop->dir_y);
@@ -214,15 +206,15 @@ void erode( float* height_map, int map_size, struct droplet* drop ) {
     float sediment_capacity = fmaxf(-delta_height 
                                    * drop->speed 
                                    * drop->water 
-                                   * SEDIMENT_CAPACITY_FACTOR, 
-                                  MIN_SEDIMENT_CAPACITY);
+                                   * param->SEDIMENT_CAPACITY_FACTOR, 
+                                  param->MIN_SEDIMENT_CAPACITY);
 
     // If carrying more sediment than capacity, or if flowing uphill:
     if (drop->sediment > sediment_capacity || delta_height > 0) {
       // If moving uphill (deltaHeight > 0) try fill up to the current height, otherwise deposit a fraction of the excess sediment
       float amount_deposit = (delta_height > 0) ? 
                               fminf(delta_height, drop->sediment) : 
-                              (drop->sediment - sediment_capacity) * DEPOSIT_SPEED;
+                              (drop->sediment - sediment_capacity) * param->DEPOSIT_SPEED;
       // Update drop sediment amount
       drop->sediment -= amount_deposit;
 
@@ -237,7 +229,7 @@ void erode( float* height_map, int map_size, struct droplet* drop ) {
       // Erode a fraction of the droplet's current carry capacity.
       // Clamp the erosion to the change in height so that it doesn't 
       // dig a hole in the terrain behind the droplet
-      float amount_to_erode = fminf((sediment_capacity - drop->sediment) * ERODE_SPEED,
+      float amount_to_erode = fminf((sediment_capacity - drop->sediment) * param->ERODE_SPEED,
                                     -delta_height);
 
       // Use erosion brush to erode from all nodes inside the droplet's erosion radius
@@ -268,8 +260,8 @@ void erode( float* height_map, int map_size, struct droplet* drop ) {
     }
 
     // Update droplet's speed and water content
-    drop->speed =  sqrtf(drop->speed * drop->speed + delta_height * GRAVITY);
-    drop->water *= (1 - EVAPORATE_SPEED);
+    drop->speed =  sqrtf(drop->speed * drop->speed + delta_height * param->GRAVITY);
+    drop->water *= (1 - param->EVAPORATE_SPEED);
   }
 }
 

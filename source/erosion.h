@@ -30,7 +30,7 @@ struct droplet {
 };
 
 
-typedef struct {
+struct erosion_param {
   int   DROPLET_LIFETIME;
   float INERTA;
   float SEDIMENT_CAPACITY_FACTOR;
@@ -39,7 +39,7 @@ typedef struct {
   float ERODE_SPEED;
   float EVAPORATE_SPEED;
   float GRAVITY;
-} erosion_setting_t;
+};
 
 
 
@@ -53,12 +53,14 @@ typedef struct {
  *                   the width of the heightmap
  * @param drop       pre-initalized structure representing the droplet
  * 
+ * @param param      erosion simulation parameters
+ * 
  * Modifies height_map in place.
  * height_map is a buffer of size map_size^2
  * Erosion parameters and inital parameters for the simulation is in the 
  * source file.
  */ 
-void erode( float* height_map, int map_size, struct droplet* drop );
+void erode( float* height_map, int map_size, struct droplet* drop, struct erosion_param* param );
 
 
 /**
@@ -80,10 +82,5 @@ void compute_weights_matrix( int radius );
  * @brief Frees the weights matrix and set pts to NULL
  */
 void free_weights_matrix( void );
-
-/**
- * @brief Writes the erosion settings
- */
-void write_settings( erosion_setting_t setting );
 
 #endif
